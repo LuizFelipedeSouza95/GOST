@@ -1,5 +1,4 @@
 import type { SectionKey } from "../App";
-import logoGost from "../assets/path_gost.svg";
 
 type Props = {
     active: SectionKey;
@@ -21,7 +20,7 @@ export default function Sidebar({ active, onChange }: Props) {
         <nav className="hidden md:flex md:flex-col md:w-64 bg-slate-900 text-gray-300 shadow-lg fixed h-full">
             <div className="flex flex-col items-center justify-center gap-2 border-b border-slate-700">
                 <div className="flex flex-row items-center justify-center">
-                    <img src={logoGost} alt="Logo GOST" className="w-10 h-10 object-cover rounded-md" />
+                    <img src="/path_gost.svg" alt="Logo GOST" className="w-10 h-10 object-cover rounded-md" />
                     <span className="text-2xl font-bold text-white">GOST</span><br />
                 </div>
                 <span className="text-lg text-white italic text-center">Grupamento Operacional de Supressão Tatica</span>

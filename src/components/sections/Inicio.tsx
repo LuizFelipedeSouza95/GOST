@@ -1,4 +1,4 @@
-import emblemImage from "../../assets/path_gost.svg";
+const emblemImage = "/path_gost.svg";
 
 export default function Inicio() {
     return (
