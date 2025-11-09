@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import Sidebar from "./components/Sidebar";
+import MobileHeader from "./components/MobileHeader";
 import Inicio from "./components/sections/Inicio";
 import Hierarquia from "./components/sections/Hierarquia";
 import Recrutamento from "./components/sections/Recrutamento";
@@ -77,6 +78,7 @@ export default function App() {
 
     return (
         <div className="h-full flex font-sans bg-slate-100">
+			<MobileHeader active={activeSection} onChange={setActiveSection} />
             <Sidebar active={activeSection} onChange={setActiveSection} />
             <main className="flex-1 md:ml-64 mt-16 md:mt-0 p-6 md:p-10 overflow-y-auto">
                 {renderSection()}
