@@ -21,12 +21,12 @@ export default function MobileHeader({ active, onChange }: Props) {
 	return (
 		<header className="md:hidden fixed top-0 left-0 right-0 z-50 bg-slate-900 text-white border-b border-slate-700">
 			<div className="flex items-center justify-between px-4 py-3">
-				<div className="flex items-center gap-2">
-					<div className="flex flex-row items-center justify-center">
+				<div className="flex flex-col items-start gap-1">
+					<div className="flex flex-row items-center gap-2">
 						<a href="/"><img src="/path_gost.svg" alt="Logo GOST" className="w-8 h-8 object-cover rounded-md" /></a>
 						<span className="font-semibold">GOST</span>
 					</div>
-					<span className="text-lg text-white italic text-center mb-4">Grupamento Operacional de Supressão Tatica</span>
+					<span className="text-xs text-white italic text-left">Grupamento Operacional de Supressão Tatica</span>
 				</div>
 				<button
 					aria-label="Abrir menu"
