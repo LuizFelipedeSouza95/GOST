@@ -8,8 +8,8 @@ type Props = {
 
 const items: { key: SectionKey; label: string }[] = [
 	{ key: "inicio", label: "Início" },
-	{ key: "hierarquia", label: "Hierarquia" },
 	{ key: "recrutamento", label: "Recrutamento (Q&A)" },
+	{ key: "hierarquia", label: "Hierarquia" },
 	{ key: "disciplina", label: "Conduta e Disciplina" },
 	{ key: "uniformes", label: "Uniformes (Kit GOST)" },
 	{ key: "briefing", label: "Briefing de Missão" },
@@ -22,8 +22,11 @@ export default function MobileHeader({ active, onChange }: Props) {
 		<header className="md:hidden fixed top-0 left-0 right-0 z-50 bg-slate-900 text-white border-b border-slate-700">
 			<div className="flex items-center justify-between px-4 py-3">
 				<div className="flex items-center gap-2">
-					<img src="/path_gost.svg" alt="Logo GOST" className="w-8 h-8 object-cover rounded-md" />
-					<span className="font-semibold">GOST</span>
+					<div className="flex flex-row items-center justify-center">
+						<a href="/"><img src="/path_gost.svg" alt="Logo GOST" className="w-8 h-8 object-cover rounded-md" /></a>
+						<span className="font-semibold">GOST</span>
+					</div>
+					<span className="text-lg text-white italic text-center mb-4">Grupamento Operacional de Supressão Tatica</span>
 				</div>
 				<button
 					aria-label="Abrir menu"
@@ -41,7 +44,7 @@ export default function MobileHeader({ active, onChange }: Props) {
 						{items.map((item) => (
 							<li key={item.key}>
 								<a
-									href={`#${item.key}`}
+									href={item.key === "inicio" ? "/" : `/${item.key}`}
 									className={`nav-link block px-3 py-2 rounded text-base ${active === item.key ? "active" : ""}`}
 									onClick={(e) => {
 										e.preventDefault();
@@ -59,5 +62,3 @@ export default function MobileHeader({ active, onChange }: Props) {
 		</header>
 	);
 }
-
-

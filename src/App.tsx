@@ -30,29 +30,30 @@ const sectionsOrder: SectionKey[] = [
 
 export default function App() {
     const initialSection = useMemo<SectionKey>(() => {
-        const h = window.location.hash.replace("#", "");
-        return (sectionsOrder.includes(h as SectionKey) ? h : "inicio") as SectionKey;
+		const p = window.location.pathname.replace(/^\/+/, "");
+		const key = (p || "inicio") as SectionKey;
+		return (sectionsOrder.includes(key) ? key : "inicio") as SectionKey;
     }, []);
     const [activeSection, setActiveSection] = useState<SectionKey>(initialSection);
     const [mobileOpen, setMobileOpen] = useState(false);
 
     useEffect(() => {
-        const handleHashChange = () => {
-            const h = window.location.hash.replace("#", "");
-            if (sectionsOrder.includes(h as SectionKey)) {
-                setActiveSection(h as SectionKey);
+		const handlePopState = () => {
+			const p = window.location.pathname.replace(/^\/+/, "");
+			const key = (p || "inicio") as SectionKey;
+			if (sectionsOrder.includes(key)) {
+				setActiveSection(key);
                 window.scrollTo({ top: 0, behavior: "instant" as ScrollBehavior });
                 setMobileOpen(false);
             }
         };
-        window.addEventListener("hashchange", handleHashChange);
-        return () => window.removeEventListener("hashchange", handleHashChange);
+		window.addEventListener("popstate", handlePopState);
+		return () => window.removeEventListener("popstate", handlePopState);
     }, []);
 
     useEffect(() => {
-        if (window.location.hash.replace("#", "") !== activeSection) {
-            window.location.hash = activeSection;
-        }
+		const path = activeSection === "inicio" ? "/" : `/${activeSection}`;
+		if (window.location.pathname !== path) history.pushState(null, "", path);
     }, [activeSection]);
 
     const renderSection = () => {
