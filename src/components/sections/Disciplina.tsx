@@ -10,7 +10,7 @@ export default function Disciplina() {
                         Após ser promovido a Soldado (1 Estrela), o operador terá <strong>quatro (4) meses</strong> para se adequar integralmente aos padrões de fardamento primário e secundário definidos pela GOST.
                     </p>
                 </div>
-                <div className="bg-white rounded-lg shadow-lg p-6 border border-red-200 bg-red-50">
+                <div className="bg-white rounded-lg shadow-lg p-6 border border-red-200">
                     <h2 className="text-2xl font-semibold text-slate-700 mb-4">2. Faltas e Remoção</h2>
                     <p className="text-lg text-gray-700">
                         A assiduidade é um pilar do comprometimento. Se o operador acumular <strong>três (3) faltas não justificadas</strong> (por escrito ao Comando de Squad) em treinamentos ou missões oficiais, ele será <strong>removido</strong> do grupo oficial de operadores e deverá <strong>entregar imediatamente o patch oficial da GOST</strong>.
