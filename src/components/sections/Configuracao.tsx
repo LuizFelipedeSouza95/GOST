@@ -97,6 +97,40 @@ export default function Configuracao() {
 	const [squadEditId, setSquadEditId] = useState<string | null>(null);
 	const [squadForm, setSquadForm] = useState<any>(null);
 
+	// Dados do time (equipe)
+	const [teamLoading, setTeamLoading] = useState(false);
+	const [teamId, setTeamId] = useState<string | null>(null);
+	const [teamForm, setTeamForm] = useState<any>({
+		nome_equipe: "",
+		data_fundacao: "",
+		email: "",
+		telefone: "",
+		whatsapp: "",
+		endereco: "",
+		cidade: "",
+		estado: "",
+		pais: "",
+		cep: "",
+		facebook: "",
+		instagram: "",
+		nome_significado_sigla: "",
+		imagem_url: "",
+		fundador: "",
+		co_fundadores: ""
+	});
+	const [teamModalOpen, setTeamModalOpen] = useState(false);
+	const [isAdmin, setIsAdmin] = useState(false);
+	const [teamImageUploading, setTeamImageUploading] = useState(false);
+	const [teamMsg, setTeamMsg] = useState<{ type: "success" | "error"; text: string } | null>(null);
+	useEffect(() => {
+		try {
+			const raw = localStorage.getItem("currentUser");
+			const u = raw ? JSON.parse(raw) : null;
+			setIsAdmin(Array.isArray(u?.roles) && u.roles.includes("admin"));
+		} catch { setIsAdmin(false); }
+	}, []);
+
+
 	// Users (listar e alterar patente)
 	const [users, setUsers] = useState<any[]>([]);
 	const [loadingUsers, setLoadingUsers] = useState(false);
@@ -121,6 +155,22 @@ export default function Configuracao() {
 	const [confirmSquadId, setConfirmSquadId] = useState<string | null>(null);
 	const [confirmSquadName, setConfirmSquadName] = useState<string>("");
 
+	// Evitar scroll do fundo quando algum modal estiver aberto
+	const anyModalOpen =
+		teamModalOpen ||
+		editOpen ||
+		confirmActiveOpen ||
+		confirmSquadOpen ||
+		squadModalOpen;
+	useEffect(() => {
+		if (!anyModalOpen) return;
+		const prev = document.body.style.overflow;
+		document.body.style.overflow = "hidden";
+		return () => {
+			document.body.style.overflow = prev;
+		};
+	}, [anyModalOpen]);
+
 	// Opções de classe (airsoft)
 	const CLASS_OPTIONS = ["Assalt", "DMR", "Sniper", "Suporte"];
 
@@ -132,6 +182,26 @@ export default function Configuracao() {
 		if (digits.length > 2) parts.push(digits.slice(2, 4));
 		if (digits.length > 4) parts.push(digits.slice(4, 8));
 		return parts.join("/");
+	};
+
+	// Máscara de telefone/whatsapp BR: (99) 99999-9999 ou (99) 9999-9999
+	const maskPhoneBR = (value: string) => {
+		const digits = (value || "").replace(/\D/g, "").slice(0, 11);
+		const ddd = digits.slice(0, 2);
+		const rest = digits.slice(2);
+		if (!ddd) return "";
+		// 11 dígitos -> (99) 99999-9999 | 10 dígitos -> (99) 9999-9999
+		if (rest.length > 5) {
+			// pode ser 10 ou 11; se 11 usa 5+4; se 10, cai na form abaixo
+			if (digits.length === 11) {
+				const p1 = rest.slice(0, 5);
+				const p2 = rest.slice(5, 9);
+				return `(${ddd}) ${p1}${p2 ? "-" + p2 : ""}`;
+			}
+		}
+		const p1 = rest.slice(0, 4);
+		const p2 = rest.slice(4, 8);
+		return `(${ddd}) ${p1}${p2 ? "-" + p2 : ""}`;
 	};
 
 	const loadUsers = async () => {
@@ -164,9 +234,135 @@ export default function Configuracao() {
 		}
 	};
 
+	const loadTeam = async () => {
+		setTeamLoading(true);
+		try {
+			const res = await fetch("/api/equipe");
+			const data = await res.json();
+			const first = Array.isArray(data) ? (data[0] || null) : null;
+			if (first) {
+				setTeamId(first.id || null);
+				setTeamForm({
+					nome_equipe: first.nome_equipe || "",
+					data_fundacao: maskDateBR(first.data_fundacao || ""),
+					email: first.email || "",
+					telefone: maskPhoneBR(first.telefone || ""),
+					whatsapp: maskPhoneBR(first.whatsapp || ""),
+					endereco: first.endereco || "",
+					cidade: first.cidade || "",
+					estado: first.estado || "",
+					pais: first.pais || "",
+					cep: first.cep || "",
+					facebook: first.facebook || "",
+					instagram: first.instagram || "",
+					nome_significado_sigla: first.nome_significado_sigla || "",
+					imagem_url: first.imagem_url || "",
+					fundador: first.fundador || "",
+					co_fundadores: first.co_fundadores || ""
+				});
+			}
+		} catch {
+		} finally {
+			setTeamLoading(false);
+		}
+	};
+
+	const saveTeam = async () => {
+		try {
+			setTeamLoading(true);
+			setTeamMsg(null);
+			const payload = { ...teamForm };
+			let res: Response;
+			if (teamId) {
+				res = await fetch(`/api/equipe/${teamId}`, {
+					method: "PUT",
+					headers: { "Content-Type": "application/json" },
+					body: JSON.stringify(payload)
+				});
+			} else {
+				res = await fetch(`/api/equipe`, {
+					method: "POST",
+					headers: { "Content-Type": "application/json" },
+					body: JSON.stringify(payload)
+				});
+			}
+			const j = await res.json().catch(() => ({}));
+			if (!res.ok) {
+				setTeamMsg({ type: "error", text: j?.error || "Erro ao salvar dados do time" });
+				return;
+			}
+			if (!teamId && j?.id) setTeamId(j.id);
+			// setTeamMsg({ type: "success", text: "Dados do time salvos" });
+		} catch (e: any) {
+			setTeamMsg({ type: "error", text: e?.message || "Erro ao salvar dados do time" });
+		} finally {
+			setTeamLoading(false);
+		}
+	};
+
+	const uploadTeamImage = async (files: FileList | null) => {
+		try {
+			if (!files || files.length === 0) return;
+			const file = files[0];
+			if (!file) return;
+			setTeamImageUploading(true);
+			setTeamMsg(null);
+
+			// Garante existência de registro antes do upload
+			let ensuredId = teamId;
+			if (!ensuredId) {
+				const createRes = await fetch(`/api/equipe`, {
+					method: "POST",
+					headers: { "Content-Type": "application/json" },
+					body: JSON.stringify({ ...teamForm })
+				});
+				const created = await createRes.json().catch(() => ({}));
+				if (!createRes.ok || !created?.id) {
+					setTeamMsg({ type: "error", text: created?.error || "Falha ao criar registro da equipe antes do upload" });
+					return;
+				}
+				ensuredId = created.id as string;
+				setTeamId(ensuredId);
+			}
+
+			// Converte arquivo para base64
+			const dataUrl: string = await new Promise((resolve, reject) => {
+				const reader = new FileReader();
+				reader.onload = () => resolve(String(reader.result || ""));
+				reader.onerror = () => reject(new Error("Falha ao ler arquivo"));
+				reader.readAsDataURL(file);
+			});
+			const mime = file.type || "image/png";
+			const base64 = dataUrl.includes("base64,") ? dataUrl.split("base64,")[1] : dataUrl;
+
+			// Envia para rota específica
+			const upRes = await fetch(`/api/equipe/${ensuredId}`, {
+				method: "POST",
+				headers: { "Content-Type": "application/json" },
+				body: JSON.stringify({ imagem_base64: base64, mime })
+			});
+			const updated = await upRes.json().catch(() => ({}));
+			if (!upRes.ok) {
+				setTeamMsg({ type: "error", text: updated?.error || "Falha ao enviar imagem" });
+				return;
+			}
+
+			// Atualiza preview/local
+			setTeamForm((prev: any) => ({ ...prev, imagem_url: updated?.imagem_url || prev.imagem_url }));
+			// Recarrega do banco para garantir persistência
+			await loadTeam();
+			setTeamMsg({ type: "success", text: "Imagem atualizada" });
+		} catch (err: any) {
+			setTeamMsg({ type: "error", text: err?.message || "Erro no upload" });
+		} finally {
+			setTeamImageUploading(false);
+		}
+	};
+
 	useEffect(() => {
 		loadUsers();
 		loadSquads();
+		loadTeam();
 	}, []);
 
 	const openEdit = async (userId: string) => {
@@ -408,6 +604,166 @@ export default function Configuracao() {
 			<h2 className="text-3xl font-bold text-slate-800 mb-6">Configuração</h2>
 
 			<div className="grid md:grid-cols-2 gap-6">
+				{/* Dados do time */}
+				<div className="bg-white rounded-lg shadow p-5 border border-slate-200 md:col-span-2">
+					<div className="flex items-center justify-between mb-4">
+						<h3 className="text-xl font-semibold">Dados do Time</h3>
+						<div className="flex items-center gap-2">
+							{teamLoading && <span className="text-sm text-slate-600">Carregando...</span>}
+							{teamMsg && (
+								<span className={`text-sm ${teamMsg.type === "error" ? "text-rose-600" : "text-emerald-700"}`}>
+									{teamMsg.text}
+								</span>
+							)}
+							{isAdmin && (
+								<button
+									aria-label="Editar dados do time"
+									className="p-2 rounded hover:bg-slate-100"
+									onClick={() => setTeamModalOpen(true)}
+								>
+									<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-5 h-5 text-slate-700">
+										<path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04a1 1 0 0 0 0-1.41l-2.34-2.34a1 1 0 0 0-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z" />
+									</svg>
+								</button>
+							)}
+						</div>
+					</div>
+					<div className="grid grid-cols-1 gap-4 md:grid-cols-2 items-center justify-center">
+						<div className="grid grid-cols-2 gap-5 justify-center">
+							<div className="md:col-span-1">
+								<div className="text-sm text-slate-500">Nome da equipe</div>
+								<div className="text-lg font-semibold text-slate-900 break-words">{teamForm.nome_equipe || "-"}</div>
+							</div>
+							<div className="md:col-span-1">
+								<div className="text-sm text-slate-500">Data de fundação</div>
+								<div className="text-lg text-slate-800">{teamForm.data_fundacao || "-"}</div>
+							</div>
+							<div className="md:col-span-2">
+								<div className="text-sm text-slate-500">Significado da Sigla / Nome</div>
+								<div className="text-sm text-slate-800 break-words">{teamForm.nome_significado_sigla || "-"}</div>
+							</div>
+							<div className="md:col-span-1">
+								<div className="text-sm text-slate-500">Fundador</div>
+								<div className="text-sm text-slate-800 break-words">{teamForm.fundador || "-"}</div>
+							</div>
+							<div className="md:col-span-1">
+								<div className="text-sm text-slate-500">Co-fundadores</div>
+								<div className="text-sm text-slate-800 break-words">{teamForm.co_fundadores || "-"}</div>
+							</div>
+						</div>
+						<div className="flex justify-center items-center">
+							{teamForm.imagem_url ? (
+								<img
+									src={teamForm.imagem_url}
+									alt="Imagem do time"
+									className="mt-1 w-full max-w-xs h-auto object-contain"
+								/>
+							) : (
+								<span className="text-sm text-slate-500">Sem imagem</span>
+							)}
+						</div>
+
+					</div>
+				</div>
+
+				{/* Modal editar dados do time (admin) */}
+				{teamModalOpen && isAdmin && (
+					<div className="fixed inset-0 z-[2100] flex items-center justify-center p-2 sm:p-3">
+						<div className="absolute inset-0 bg-black/40" onClick={() => setTeamModalOpen(false)}></div>
+						<div className="relative bg-white rounded-lg shadow-xl w-full max-w-sm sm:max-w-md md:max-w-2xl lg:max-w-3xl p-3 sm:p-4 md:p-6 mx-auto max-h-[90vh] overflow-y-auto">
+							<div className="flex items-center justify-between mb-3">
+								<h4 className="text-lg font-semibold">Editar dados do time</h4>
+								<button className="p-2 rounded hover:bg-slate-100" onClick={() => setTeamModalOpen(false)} aria-label="Fechar">
+									<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-5 h-5">
+										<path d="M6 18L18 6M6 6l12 12" />
+									</svg>
+								</button>
+							</div>
+							<div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
+								<div className="md:col-span-1">
+									<label className="block text-sm text-slate-600">Nome da equipe</label>
+									<input className="mt-1 w-full rounded border px-3 py-2" value={teamForm.nome_equipe} onChange={(e) => setTeamForm({ ...teamForm, nome_equipe: e.target.value })} />
+								</div>
+								<div>
+									<label className="block text-sm text-slate-600">Data de fundação</label>
+									<input className="mt-1 w-full rounded border px-3 py-2" placeholder="dd/mm/aaaa" value={teamForm.data_fundacao} onChange={(e) => setTeamForm({ ...teamForm, data_fundacao: maskDateBR(e.target.value) })} inputMode="numeric" maxLength={10} />
+								</div>
+								<div>
+									<label className="block text-sm text-slate-600">Email</label>
+									<input className="mt-1 w-full rounded border px-3 py-2" value={teamForm.email} onChange={(e) => setTeamForm({ ...teamForm, email: e.target.value })} />
+								</div>
+								<div>
+									<label className="block text-sm text-slate-600">Telefone</label>
+									<input className="mt-1 w-full rounded border px-3 py-2" value={teamForm.telefone} onChange={(e) => setTeamForm({ ...teamForm, telefone: maskPhoneBR(e.target.value) })} inputMode="numeric" maxLength={15} />
+								</div>
+								<div>
+									<label className="block text-sm text-slate-600">WhatsApp</label>
+									<input className="mt-1 w-full rounded border px-3 py-2" value={teamForm.whatsapp} onChange={(e) => setTeamForm({ ...teamForm, whatsapp: maskPhoneBR(e.target.value) })} inputMode="numeric" maxLength={15} />
+								</div>
+								<div className="sm:col-span-2 lg:col-span-2">
+									<label className="block text-sm text-slate-600">Endereço</label>
+									<input className="mt-1 w-full rounded border px-3 py-2" value={teamForm.endereco} onChange={(e) => setTeamForm({ ...teamForm, endereco: e.target.value })} />
+								</div>
+								<div>
+									<label className="block text-sm text-slate-600">Cidade</label>
+									<input className="mt-1 w-full rounded border px-3 py-2" value={teamForm.cidade} onChange={(e) => setTeamForm({ ...teamForm, cidade: e.target.value })} />
+								</div>
+								<div>
+									<label className="block text-sm text-slate-600">Estado</label>
+									<input className="mt-1 w-full rounded border px-3 py-2" value={teamForm.estado} onChange={(e) => setTeamForm({ ...teamForm, estado: e.target.value })} />
+								</div>
+								<div>
+									<label className="block text-sm text-slate-600">País</label>
+									<input className="mt-1 w-full rounded border px-3 py-2" value={teamForm.pais} onChange={(e) => setTeamForm({ ...teamForm, pais: e.target.value })} />
+								</div>
+								<div>
+									<label className="block text-sm text-slate-600">CEP</label>
+									<input className="mt-1 w-full rounded border px-3 py-2" value={teamForm.cep} onChange={(e) => setTeamForm({ ...teamForm, cep: e.target.value })} />
+								</div>
+								<div>
+									<label className="block text-sm text-slate-600">Facebook</label>
+									<input className="mt-1 w-full rounded border px-3 py-2" value={teamForm.facebook} onChange={(e) => setTeamForm({ ...teamForm, facebook: e.target.value })} />
+								</div>
+								<div>
+									<label className="block text-sm text-slate-600">Instagram</label>
+									<input className="mt-1 w-full rounded border px-3 py-2" value={teamForm.instagram} onChange={(e) => setTeamForm({ ...teamForm, instagram: e.target.value })} />
+								</div>
+								<div className="sm:col-span-2 lg:col-span-3">
+									<label className="block text-sm text-slate-600">Significado da Sigla / Nome</label>
+									<input className="mt-1 w-full rounded border px-3 py-2" value={teamForm.nome_significado_sigla} onChange={(e) => setTeamForm({ ...teamForm, nome_significado_sigla: e.target.value })} />
+								</div>
+								<div className="sm:col-span-2 lg:col-span-3">
+									<label className="block text-sm text-slate-600">Upload da imagem</label>
+									<input
+										type="file"
+										accept="image/*"
+										className="mt-1 w-full rounded border px-3 py-2"
+										onChange={(e) => uploadTeamImage(e.target.files)}
+										disabled={teamImageUploading}
+									/>
+									{teamImageUploading && <p className="text-xs text-slate-500 mt-1">Enviando imagem...</p>}
+								</div>
+								<div>
+									<label className="block text-sm text-slate-600">Fundador</label>
+									<input className="mt-1 w-full rounded border px-3 py-2" value={teamForm.fundador} onChange={(e) => setTeamForm({ ...teamForm, fundador: e.target.value })} />
+								</div>
+								<div className="sm:col-span-2 lg:col-span-3">
+									<label className="block text-sm text-slate-600">Co-fundadores</label>
+									<input className="mt-1 w-full rounded border px-3 py-2" value={teamForm.co_fundadores} onChange={(e) => setTeamForm({ ...teamForm, co_fundadores: e.target.value })} />
+								</div>
+							</div>
+							<div className="flex items-center justify-end gap-3 mt-4">
+								<button type="button" className="px-4 py-2 rounded border border-slate-300 hover:bg-slate-50" onClick={loadTeam} disabled={teamLoading || teamImageUploading}>
+									Recarregar
+								</button>
+								<button type="button" className="px-4 py-2 rounded bg-emerald-600 text-white hover:bg-emerald-700 disabled:opacity-60" onClick={async () => { await saveTeam(); setTeamModalOpen(false); }} disabled={teamLoading || teamImageUploading}>
+									Salvar
+								</button>
+							</div>
+						</div>
+					</div>
+				)}
+
 
 				{/* Usuários: editar via modal */}
 				<div className="bg-white rounded-lg shadow p-5 border border-slate-200 md:col-span-2">

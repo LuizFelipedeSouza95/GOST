@@ -7,7 +7,8 @@ export default function Hierarquia() {
             </p>
             <div className="bg-white rounded-lg shadow-lg overflow-hidden border border-gray-200 mb-6">
                 <h2 className="text-2xl font-semibold text-slate-700 p-6 bg-gray-50 border-b">1. Estrutura de Comando</h2>
-                <div className="overflow-x-auto">
+                {/* Tabela (desktop e acima) */}
+                <div className="overflow-x-auto hidden md:block">
                     <table className="min-w-full divide-y divide-gray-200">
                         <thead className="bg-gray-100">
                             <tr>
@@ -44,6 +45,77 @@ export default function Hierarquia() {
                             </tr>
                         </tbody>
                     </table>
+                </div>
+                {/* Cards (somente mobile) */}
+                <div className="md:hidden p-4 space-y-3">
+                    <div className="rounded-lg border border-slate-200 p-4">
+                        <div className="text-sm text-slate-500">Posto</div>
+                        <div className="font-semibold text-slate-900">Comando Geral</div>
+                        <div className="mt-2 grid grid-cols-2 gap-2 text-sm">
+                            <div>
+                                <div className="text-slate-500">Distintivo</div>
+                                <div className="text-slate-800">4 Estrelas</div>
+                            </div>
+                            <div>
+                                <div className="text-slate-500">Terminologia</div>
+                                <div className="text-slate-800">Comandante</div>
+                            </div>
+                        </div>
+                        <div className="mt-2 text-sm text-slate-700">
+                            Doutrina, Estratégia e Decisão Final.
+                        </div>
+                    </div>
+                    <div className="rounded-lg border border-slate-200 p-4">
+                        <div className="text-sm text-slate-500">Posto</div>
+                        <div className="font-semibold text-slate-900">Subcomando</div>
+                        <div className="mt-2 grid grid-cols-2 gap-2 text-sm">
+                            <div>
+                                <div className="text-slate-500">Distintivo</div>
+                                <div className="text-slate-800">3 Estrelas</div>
+                            </div>
+                            <div>
+                                <div className="text-slate-500">Terminologia</div>
+                                <div className="text-slate-800">Sub</div>
+                            </div>
+                        </div>
+                        <div className="mt-2 text-sm text-slate-700">
+                            Gestão Tática, Logística de Missão, Apoio Direto.
+                        </div>
+                    </div>
+                    <div className="rounded-lg border border-slate-200 p-4">
+                        <div className="text-sm text-slate-500">Posto</div>
+                        <div className="font-semibold text-slate-900">Comando de Squad</div>
+                        <div className="mt-2 grid grid-cols-2 gap-2 text-sm">
+                            <div>
+                                <div className="text-slate-500">Distintivo</div>
+                                <div className="text-slate-800">2 Estrelas</div>
+                            </div>
+                            <div>
+                                <div className="text-slate-500">Terminologia</div>
+                                <div className="text-slate-800">Líder de Squad</div>
+                            </div>
+                        </div>
+                        <div className="mt-2 text-sm text-slate-700">
+                            Liderança no Terreno (LDT), Execução Tática do Squad.
+                        </div>
+                    </div>
+                    <div className="rounded-lg border border-slate-200 p-4">
+                        <div className="text-sm text-slate-500">Posto</div>
+                        <div className="font-semibold text-slate-900">Operador/Soldado</div>
+                        <div className="mt-2 grid grid-cols-2 gap-2 text-sm">
+                            <div>
+                                <div className="text-slate-500">Distintivo</div>
+                                <div className="text-slate-800">1 Estrela</div>
+                            </div>
+                            <div>
+                                <div className="text-slate-500">Terminologia</div>
+                                <div className="text-slate-800">Soldado / Operador</div>
+                            </div>
+                        </div>
+                        <div className="mt-2 text-sm text-slate-700">
+                            Execução de Ordens, Segurança de Setor, Patrulha.
+                        </div>
+                    </div>
                 </div>
             </div>
             <div className="bg-white rounded-lg shadow-lg p-6 border border-gray-200">

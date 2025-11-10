@@ -3,8 +3,9 @@ import 'dotenv/config';
 import { Options, ReflectMetadataProvider } from '@mikro-orm/core';
 import { PostgreSqlDriver } from '@mikro-orm/postgresql';
 import { Usuario } from '../entities/usuarios.entity.js';
-import { Comando } from '../entities/comando.entity.js';
+import { Equipe } from '../entities/equipe.entity.js';
 import { Squads } from '../entities/squads.entity.js';
+import { Jogo } from '../entities/jogos.entity.js';
 
 const config: Options = {
   migrations: {
@@ -16,7 +17,7 @@ const config: Options = {
   driver: PostgreSqlDriver,
   clientUrl: process.env.DATABASE_URL || process.env.GOST_DATABASE_URL,
   schema: process.env.DB_SCHEMA || 'public',
-  entities: [Usuario, Comando, Squads],
+  entities: [Usuario, Equipe, Squads, Jogo],
   metadataProvider: ReflectMetadataProvider,
   debug: process.env.NODE_ENV !== 'production',
   driverOptions: (() => {

@@ -9,6 +9,10 @@ import Briefing from "./components/sections/Briefing";
 import Logistica from "./components/sections/Logistica";
 import Membros from "./components/sections/Membros";
 import Configuracao from "./components/sections/Configuracao";
+import Jogos from "./components/sections/jogos";
+
+// Tempo de guarda para rolagem programática terminar antes de reativar detecção de scroll
+const TIMEOUT_MS = 1200;
 
 export type SectionKey =
     | "inicio"
@@ -18,6 +22,7 @@ export type SectionKey =
     | "uniformes"
     | "briefing"
     | "logistica"
+    | "jogos"
     | "membros"
     | "configuracao";
 
@@ -29,6 +34,7 @@ const sectionsOrder: SectionKey[] = [
     "uniformes",
     "briefing",
     "logistica",
+    "jogos",
     "membros",
     "configuracao"
 ];
@@ -51,12 +57,14 @@ export default function App() {
             return null;
         }
     });
+
     const canAccessConfig = useMemo(() => {
         const roles = Array.isArray(appUser?.roles) ? appUser.roles : [];
         if (roles.includes("admin")) return true;
         const patent = appUser?.patent;
         return !!(patent && patent !== "soldado");
     }, [appUser]);
+
     const visibleSections = useMemo<SectionKey[]>(() => {
         return canAccessConfig ? sectionsOrder : (sectionsOrder.filter((k) => k !== "configuracao") as SectionKey[]);
     }, [canAccessConfig]);
@@ -69,16 +77,36 @@ export default function App() {
         uniformes: null,
         briefing: null,
         logistica: null,
+        jogos: null,
         membros: null,
         configuracao: null
     });
-    const scrollByNavRef = useRef(false);
 
+    // Flag para indicar que a rolagem foi iniciada pela navegação (menu)
+    const scrollByNavRef = useRef(false);
+    // Timer para desativar scrollByNavRef após a rolagem suave
+    const scrollEndTimerRef = useRef<number | null>(null);
+
+    // Estado para controlar a classe snap-none (snap desativado permanentemente para estabilidade)
+    const [disableSnap, setDisableSnap] = useState(true);
+
+
+    // Efeito para atualizar o histórico de navegação (URL)
+    useEffect(() => {
+        const path = activeSection === "inicio" ? "/" : `/${activeSection}`;
+        // Só atualiza o histórico se não estiver sendo rolado pela navegação para evitar interrupções
+        if (window.location.pathname !== path && !scrollByNavRef.current) {
+            history.pushState(null, "", path);
+        }
+    }, [activeSection]);
+
+    // Lógica para sincronizar a barra lateral e a URL quando o usuário usa o botão "voltar" do navegador
     useEffect(() => {
         const handlePopState = () => {
             const p = window.location.pathname.replace(/^\/+/, "");
             const key = (p || "inicio") as SectionKey;
             if (sectionsOrder.includes(key)) {
+                // Ao usar o popstate, o navegador já posiciona, não precisa de rolagem programática.
                 setActiveSection(key);
                 setMobileOpen(false);
             }
@@ -87,12 +115,7 @@ export default function App() {
         return () => window.removeEventListener("popstate", handlePopState);
     }, []);
 
-    useEffect(() => {
-        const path = activeSection === "inicio" ? "/" : `/${activeSection}`;
-        if (window.location.pathname !== path) history.pushState(null, "", path);
-    }, [activeSection]);
-
-    // Atualiza usuário quando login/logout ocorrer em qualquer lugar (inclui mesmo tab via evento manual)
+    // Atualiza usuário quando login/logout ocorrer (eventos storage)
     useEffect(() => {
         const onStorage = (e: StorageEvent) => {
             if (e.key === "currentUser") {
@@ -115,43 +138,100 @@ export default function App() {
         }
     }, [canAccessConfig, activeSection]);
 
-    // Ao trocar de seção (se veio do menu), rola até ela e fecha menu mobile
+    // 👇 Lógica Principal de Rolagem (Disparada quando activeSection muda via navegação)
     useEffect(() => {
+        // Se não foi a navegação do menu que causou a mudança, ignora a rolagem
+        if (!scrollByNavRef.current) return;
+
         const node = sectionRefs.current[activeSection];
-        if (scrollByNavRef.current && node && mainRef.current) {
-            node.scrollIntoView({ behavior: "smooth", block: "start" });
+        const root = mainRef.current;
+
+        if (node && root) {
+            // 1. Snap permanece desativado para estabilidade
+
+            // 2. Tenta rolar suavemente
+            try {
+                // Calcula a posição relativa: posição absoluta do topo do nó - posição absoluta do topo do container + scroll atual do container
+                const targetTop = node.getBoundingClientRect().top - root.getBoundingClientRect().top + root.scrollTop;
+                root.scrollTo({ top: targetTop, behavior: "smooth" });
+            } catch {
+                // Fallback para scrollIntoView
+                node.scrollIntoView({ behavior: "smooth", block: "start" });
+            }
+
+            // 3. Limpa timers antigos e configura o novo para reabilitar o snap
+            if (scrollEndTimerRef.current) {
+                clearTimeout(scrollEndTimerRef.current);
+            }
+
+            scrollEndTimerRef.current = window.setTimeout(() => {
+                // A flag de navegação só deve ser desativada DEPOIS que a rolagem termina
+                scrollByNavRef.current = false;
+                scrollEndTimerRef.current = null;
+            }, TIMEOUT_MS);
+        } else {
+            // Caso a seção não seja encontrada, reseta o flag imediatamente
+            scrollByNavRef.current = false;
         }
-        scrollByNavRef.current = false;
+
+        // Fecha o menu móvel
         setMobileOpen(false);
+        setSidebarOpen(false); // Fecha a sidebar em geral
     }, [activeSection]);
 
-    // IntersectionObserver para atualizar seção ativa com scroll
+
+    // Atualiza seção ativa com base no scroll (para rolagem manual)
     useEffect(() => {
         const root = mainRef.current;
         if (!root) return;
-        const observer = new IntersectionObserver(
-            (entries) => {
-                let bestKey: SectionKey | null = null;
-                let bestRatio = 0;
-                for (const entry of entries) {
-                    const key = (entry.target as HTMLElement).dataset.sectionKey as SectionKey;
-                    if (entry.intersectionRatio > bestRatio) {
-                        bestRatio = entry.intersectionRatio;
-                        bestKey = key;
+        let rafId: number | null = null;
+
+        const onScroll = () => {
+            // ⛔ Bloqueia a atualização se a rolagem foi iniciada pelo menu
+            if (scrollByNavRef.current) return;
+
+            if (rafId != null) cancelAnimationFrame(rafId);
+            rafId = requestAnimationFrame(() => {
+                try {
+                    const rootRect = root.getBoundingClientRect();
+                    let bestKey: SectionKey | null = null;
+                    let bestDist = Number.POSITIVE_INFINITY;
+
+                    // Ponto de referência: o topo do container de scroll (rootRect.top)
+                    const referenceTop = rootRect.top;
+
+                    for (const key of visibleSections) { // Itera apenas pelas visíveis
+                        const el = sectionRefs.current[key];
+                        if (!el) continue;
+
+                        const rect = el.getBoundingClientRect();
+                        // Calcula a distância absoluta do topo da seção em relação ao topo do container
+                        const topWithinRoot = rect.top - referenceTop;
+                        const dist = Math.abs(topWithinRoot);
+
+                        // Seleciona a seção cujo topo está mais próximo do topo do container
+                        if (dist < bestDist) {
+                            bestDist = dist;
+                            bestKey = key;
+                        }
                     }
-                }
-                if (bestKey && bestKey !== activeSection && bestRatio >= 0.51) {
-                    setActiveSection(bestKey);
-                }
-            },
-            { root, threshold: [0.25, 0.51, 0.75] }
-        );
-        sectionsOrder.forEach((key) => {
-            const el = sectionRefs.current[key];
-            if (el) observer.observe(el);
-        });
-        return () => observer.disconnect();
-    }, [activeSection]);
+
+                    if (bestKey && bestKey !== activeSection) {
+                        setActiveSection(bestKey);
+                        // Atualiza a URL aqui para rolagem manual
+                        const path = bestKey === "inicio" ? "/" : `/${bestKey}`;
+                        if (window.location.pathname !== path) history.replaceState(null, "", path);
+                    }
+                } catch { /* ignore */ }
+            });
+        };
+
+        root.addEventListener("scroll", onScroll, { passive: true });
+        return () => {
+            root.removeEventListener("scroll", onScroll);
+            if (rafId != null) cancelAnimationFrame(rafId);
+        };
+    }, [activeSection, visibleSections]);
 
     // Fechar sidebar com ESC
     useEffect(() => {
@@ -162,20 +242,28 @@ export default function App() {
         return () => document.removeEventListener("keydown", onKey);
     }, [sidebarOpen]);
 
+    // Função de clique no item de navegação
     const handleNavChange = useCallback((key: SectionKey) => {
+        // Redirecionamento de segurança
         if (key === "configuracao" && !canAccessConfig) {
             setActiveSection("inicio");
             return;
         }
+
         const node = sectionRefs.current[key];
         if (node && mainRef.current) {
+            // 1. Ativa a flag de navegação ANTES de mudar o estado 
             scrollByNavRef.current = true;
+            // 2. A mudança de estado aciona o useEffect que lida com a rolagem
             setActiveSection(key);
-            // scroll happens in effect
+            // 3. Atualiza a URL imediatamente (ou no efeito)
+            const path = key === "inicio" ? "/" : `/${key}`;
+            if (window.location.pathname !== path) history.pushState(null, "", path);
         } else {
+            // Se a seção não existe (ex: configuracao foi removida), apenas muda o estado.
             setActiveSection(key);
         }
-    }, [canAccessConfig]);
+    }, [canAccessConfig]); // Dependências do useCallback
 
     const renderSectionByKey = (key: SectionKey) => {
         switch (key) {
@@ -193,6 +281,8 @@ export default function App() {
                 return <Briefing />;
             case "logistica":
                 return <Logistica />;
+            case "jogos":
+                return <Jogos />;
             case "membros":
                 return <Membros />;
             case "configuracao":
@@ -207,7 +297,7 @@ export default function App() {
             {/* Botão global para abrir sidebar - mobile */}
             <button
                 aria-label="Abrir menu"
-                className="fixed top-3 left-3 z-[1600] p-2 rounded bg-slate-900 text-white shadow hover:bg-slate-800 md:hidden"
+                className="fixed top-3 right-3 z-[1600] p-2 rounded bg-slate-900 text-white shadow hover:bg-slate-800 md:hidden"
                 aria-expanded={sidebarOpen}
                 onClick={() => setSidebarOpen((v) => !v)}
             >
@@ -218,7 +308,7 @@ export default function App() {
             {/* Botão global para abrir sidebar - desktop */}
             <button
                 aria-label="Abrir menu"
-                className="hidden md:inline-flex fixed top-3 left-3 z-[1600] p-2 rounded bg-slate-900 text-white shadow hover:bg-slate-800"
+                className="hidden md:inline-flex fixed top-3 right-3 z-[1600] p-2 rounded bg-slate-900 text-white shadow hover:bg-slate-800"
                 aria-expanded={sidebarOpen}
                 onClick={() => setSidebarOpen((v) => !v)}
             >
@@ -237,15 +327,16 @@ export default function App() {
             <Sidebar active={activeSection} onChange={handleNavChange} open={sidebarOpen} onClose={() => setSidebarOpen(false)} />
             <main
                 ref={mainRef}
-                className={`flex-1 overflow-y-auto min-h-screen snap-y snap-proximity transition-[margin] duration-300 ${sidebarOpen ? "md:ml-64" : "md:ml-0"}`}
+                className={`flex-1 overflow-y-auto min-h-screen transition-[margin] duration-300 ${sidebarOpen ? "md:ml-64" : "md:ml-0"}`}
             >
-                {visibleSections.map((key) => (
+                {visibleSections.map((key, idx) => (
                     <div
                         key={key}
                         ref={(el) => (sectionRefs.current[key] = el)}
                         data-section-key={key}
-                        className="snap-start min-h-[calc(100vh-4rem)] md:min-h-screen p-6 md:p-10"
+                        className="min-h-[calc(100vh-4rem)] md:min-h-screen p-6 md:p-10"
                     >
+                        {idx > 0 && <div className="h-px bg-slate-200 mb-6 -mt-6" aria-hidden="true" />}
                         {renderSectionByKey(key)}
                     </div>
                 ))}

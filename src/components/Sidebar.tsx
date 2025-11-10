@@ -16,6 +16,7 @@ const items: { key: SectionKey; label: string }[] = [
     { key: "uniformes", label: "Uniformes (Kit GOST)" },
     { key: "briefing", label: "Briefing de Missão" },
     { key: "logistica", label: "Logística e Horários" },
+    { key: "jogos", label: "Jogos" },
     { key: "membros", label: "Membros" }
 ];
 
@@ -187,7 +188,7 @@ export default function Sidebar({ active, onChange, open = false, onClose }: Pro
 
     return (
         <nav
-            className={`fixed z-[1500] bg-slate-900 text-gray-300 shadow-lg transform transition-transform duration-300
+            className={`fixed z-[1500] bg-slate-900 text-gray-300 shadow-lg transform transition-none duration-0 md:transition-none md:duration-0 motion-reduce:transition-none
                 top-0 left-0 right-0 w-full rounded-b-lg
                 ${open ? "translate-y-0 md:translate-x-0" : "-translate-y-full md:-translate-x-full"}
                 md:top-0 md:left-0 md:right-auto md:h-screen md:w-64 md:rounded-none md:overflow-visible md:translate-y-0`}

@@ -184,8 +184,9 @@ function devApiPlugin() {
 
                     // Importa entidades on-demand
                     const { Usuario } = await import("./server/entities/usuarios.entity.js");
-                    const { Comando } = await import("./server/entities/comando.entity.js");
+                    const { Equipe } = await import("./server/entities/equipe.entity.js");
                     const { Squads } = await import("./server/entities/squads.entity.js");
+                    const { Jogo } = await import("./server/entities/jogos.entity.js");
 
                     const send = (code: number, body: any) => {
                         res.statusCode = code;
@@ -266,40 +267,59 @@ function devApiPlugin() {
                         }
                     }
 
-                    if (resource === "comando") {
+                    if (resource === "equipe") {
                         if (!id) {
                             if (method === "GET") {
-                                const list = await em.find(Comando, {}, { limit: 50, orderBy: { createdAt: "desc" } as any });
+                                const list = await em.find(Equipe, {}, { limit: 50, orderBy: { createdAt: "desc" } as any });
                                 return send(200, list);
                             }
                             if (method === "POST") {
                                 const body = await readJson(req);
-                                const { email, name, classe, data_admissao_gost, patent } = body || {};
+                                const { nome_equipe, data_fundacao, email, telefone, whatsapp, endereco, cidade, estado, pais, cep, facebook, instagram, nome_significado_sigla, imagem_url, fundador, co_fundadores } = body || {};
                                 if (!email) return send(400, { error: "Email é obrigatório" });
-                                const existing = await em.findOne(Comando, { email });
-                                if (existing) return send(409, { error: "Comando com este email já existe" });
-                                const now = new Date();
-                                const validPatents = ["comando", "comando_squad", "soldado", "sub_comando"];
-                                const comando = em.create(Comando, {
-                                    email,
-                                    name: name || null,
-                                    classe: classe || "",
-                                    data_admissao_gost: data_admissao_gost || "",
-                                    patent: validPatents.includes(patent) ? patent : "comando",
-                                    roles: ["user"],
-                                    createdAt: now,
-                                    updatedAt: now
+                                const existing = await em.findOne(Equipe, { email });
+                                if (existing) return send(409, { error: "Equipe com este email já existe" });
+                                const equipe = em.create(Equipe, {
+                                    nome_equipe: nome_equipe || "",
+                                    data_fundacao: data_fundacao || "",
+                                    email: email || "",
+                                    telefone: telefone || "",
+                                    whatsapp: whatsapp || "",
+                                    endereco: endereco || "",
+                                    cidade: cidade || "",
+                                    estado: estado || "",
+                                    pais: pais || "",
+                                    cep: cep || "",
+                                    facebook: facebook || "",
+                                    instagram: instagram || "",
+                                    nome_significado_sigla: nome_significado_sigla || "",
+                                    imagem_url: imagem_url || "",
+                                    fundador: fundador || "",
+                                    co_fundadores: co_fundadores || "",
                                 });
-                                await em.persistAndFlush(comando);
-                                return send(201, { id: comando.id, email: comando.email, name: comando.name });
+                                await em.persistAndFlush(equipe);
+                                return send(201, { id: equipe.id, email: equipe.email, name: equipe.name });
                             }
                         } else {
-                            const registro = await em.findOne(Comando, { id });
+                            const registro = await em.findOne(Equipe, { id });
                             if (!registro) return send(404, { error: "Não encontrado" });
                             if (method === "GET") return send(200, registro);
+                            if (method === "POST") {
+                                const body = await readJson(req);
+                                const { imagem_url, imagem_base64, mime } = body || {};
+                                if (!imagem_url && !imagem_base64) return send(400, { error: "Informe 'imagem_url' ou 'imagem_base64'." });
+                                if (typeof imagem_url === "string" && imagem_url) {
+                                    (registro as any).imagem_url = imagem_url;
+                                } else if (typeof imagem_base64 === "string" && imagem_base64) {
+                                    const prefix = `data:${typeof mime === "string" && mime ? mime : "image/png"};base64,`;
+                                    (registro as any).imagem_url = imagem_base64.startsWith("data:") ? imagem_base64 : (prefix + imagem_base64);
+                                }
+                                await em.flush();
+                                return send(200, registro);
+                            }
                             if (method === "PUT") {
                                 const body = await readJson(req);
-                                const allowed = ["email", "name", "classe", "data_admissao_gost", "patent", "picture"];
+                                const allowed = ["nome_equipe", "data_fundacao", "email", "telefone", "whatsapp", "endereco", "cidade", "estado", "pais", "cep", "facebook", "instagram", "nome_significado_sigla", "imagem_url", "fundador", "co_fundadores"];
                                 for (const k of allowed) if (k in (body || {})) (registro as any)[k] = body[k];
                                 await em.flush();
                                 return send(200, registro);
@@ -365,6 +385,47 @@ function devApiPlugin() {
                                         (registro as any).comando_squad = null;
                                     }
                                 }
+                                await em.flush();
+                                return send(200, registro);
+                            }
+                            if (method === "DELETE") {
+                                await em.removeAndFlush(registro);
+                                res.statusCode = 204;
+                                return res.end();
+                            }
+                        }
+                    }
+
+                    if (resource === "jogos") {
+                        if (!id) {
+                            if (method === "GET") {
+                                const list = await em.find(Jogo, {}, { limit: 50, orderBy: { createdAt: "desc" } as any });
+                                return send(200, list);
+                            }
+                            if (method === "POST") {
+                                const body = await readJson(req);
+                                const { nome_jogo, data_jogo, local_jogo, descricao_jogo, hora_inicio, hora_fim, localizacao, confirmations } = body || {};
+                                if (!nome_jogo || !data_jogo || !local_jogo || !descricao_jogo || !hora_inicio || !hora_fim || !localizacao || !confirmations) {
+                                    return send(400, { error: "Todos os campos são obrigatórios" });
+                                }
+                                const existing = await em.findOne(Jogo, { nome_jogo });
+                                if (existing) return send(409, { error: "Jogo com este nome já existe" });
+                                const now = new Date();
+                                const jogo = em.create(Jogo, {
+                                    nome_jogo, data_jogo, local_jogo, descricao_jogo, hora_inicio, hora_fim, localizacao,
+                                    createdAt: now, updatedAt: now, confirmations, status: "scheduled"
+                                });
+                                await em.persistAndFlush(jogo);
+                                return send(201, jogo);
+                            }
+                        } else {
+                            const registro = await em.findOne(Jogo, { id });
+                            if (!registro) return send(404, { error: "Não encontrado" });
+                            if (method === "GET") return send(200, registro);
+                            if (method === "PUT") {
+                                const body = await readJson(req);
+                                const allowed = ["nome_jogo", "data_jogo", "local_jogo", "descricao_jogo", "hora_inicio", "hora_fim", "localizacao", "confirmations", "status"];
+                                for (const k of allowed) if (k in (body || {})) (registro as any)[k] = body[k];
                                 await em.flush();
                                 return send(200, registro);
                             }

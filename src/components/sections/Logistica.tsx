@@ -9,8 +9,8 @@ export default function Logistica() {
                 <div className="bg-white rounded-lg shadow-lg p-6 border border-gray-200">
                     <h2 className="text-2xl font-semibold text-slate-700 mb-4">1. Dias e Horários Oficiais</h2>
                     <p className="text-lg text-gray-700">As atividades e treinamentos oficiais da GOST ocorrem:</p>
-                    <p className="text-2xl font-bold text-emerald-600 my-4">Todos os domingos, das 07h30 às 11h00.</p>
-                    <p className="text-lg text-gray-700">O local de engajamento será definido e comunicado na véspera.</p>
+                    <p className="text-2xl font-bold text-emerald-600 my-4">Todos os domingos, entre 07h30 e 16h00.</p>
+                    <p className="text-lg text-gray-700">O local de engajamento será definido e comunicado na página de jogos. <a href="/jogos" className="clique-aqui">Clique aqui</a> para ver os jogos agendados.</p>
                 </div>
                 <div className="bg-white rounded-lg shadow-lg p-6 border border-gray-200">
                     <h2 className="text-2xl font-semibold text-slate-700 mb-4">2. Café Solidário (Logística de Apoio)</h2>

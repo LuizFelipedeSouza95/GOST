@@ -35,13 +35,24 @@
           "length": 6,
           "mappedType": "datetime"
         },
-        "google_id": {
-          "name": "google_id",
+        "nome_equipe": {
+          "name": "nome_equipe",
           "type": "text",
           "unsigned": false,
           "autoincrement": false,
           "primary": false,
           "nullable": true,
+          "default": "''",
+          "mappedType": "text"
+        },
+        "data_fundacao": {
+          "name": "data_fundacao",
+          "type": "text",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": true,
+          "default": "''",
           "mappedType": "text"
         },
         "email": {
@@ -50,58 +61,12 @@
           "unsigned": false,
           "autoincrement": false,
           "primary": false,
-          "nullable": false,
+          "nullable": true,
+          "default": "''",
           "mappedType": "text"
         },
-        "name": {
-          "name": "name",
-          "type": "text",
-          "unsigned": false,
-          "autoincrement": false,
-          "primary": false,
-          "nullable": true,
-          "mappedType": "text"
-        },
-        "picture": {
-          "name": "picture",
-          "type": "text",
-          "unsigned": false,
-          "autoincrement": false,
-          "primary": false,
-          "nullable": true,
-          "mappedType": "text"
-        },
-        "roles": {
-          "name": "roles",
-          "type": "jsonb",
-          "unsigned": false,
-          "autoincrement": false,
-          "primary": false,
-          "nullable": false,
-          "default": "'[\"user\"]'",
-          "mappedType": "json"
-        },
-        "last_login": {
-          "name": "last_login",
-          "type": "timestamptz",
-          "unsigned": false,
-          "autoincrement": false,
-          "primary": false,
-          "nullable": true,
-          "length": 6,
-          "mappedType": "datetime"
-        },
-        "password": {
-          "name": "password",
-          "type": "text",
-          "unsigned": false,
-          "autoincrement": false,
-          "primary": false,
-          "nullable": true,
-          "mappedType": "text"
-        },
-        "classe": {
-          "name": "classe",
+        "telefone": {
+          "name": "telefone",
           "type": "text",
           "unsigned": false,
           "autoincrement": false,
@@ -110,8 +75,8 @@
           "default": "''",
           "mappedType": "text"
         },
-        "data_admissao_gost": {
-          "name": "data_admissao_gost",
+        "whatsapp": {
+          "name": "whatsapp",
           "type": "text",
           "unsigned": false,
           "autoincrement": false,
@@ -120,42 +85,282 @@
           "default": "''",
           "mappedType": "text"
         },
-        "patent": {
-          "name": "patent",
+        "endereco": {
+          "name": "endereco",
           "type": "text",
           "unsigned": false,
           "autoincrement": false,
           "primary": false,
           "nullable": true,
-          "default": "'comando'",
+          "default": "''",
+          "mappedType": "text"
+        },
+        "cidade": {
+          "name": "cidade",
+          "type": "text",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": true,
+          "default": "''",
+          "mappedType": "text"
+        },
+        "estado": {
+          "name": "estado",
+          "type": "text",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": true,
+          "default": "''",
+          "mappedType": "text"
+        },
+        "pais": {
+          "name": "pais",
+          "type": "text",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": true,
+          "default": "''",
+          "mappedType": "text"
+        },
+        "cep": {
+          "name": "cep",
+          "type": "text",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": true,
+          "default": "''",
+          "mappedType": "text"
+        },
+        "facebook": {
+          "name": "facebook",
+          "type": "text",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": true,
+          "default": "''",
+          "mappedType": "text"
+        },
+        "instagram": {
+          "name": "instagram",
+          "type": "text",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": true,
+          "default": "''",
+          "mappedType": "text"
+        },
+        "nome_significado_sigla": {
+          "name": "nome_significado_sigla",
+          "type": "text",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": true,
+          "default": "''",
+          "mappedType": "text"
+        },
+        "imagem_url": {
+          "name": "imagem_url",
+          "type": "text",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": true,
+          "default": "''",
+          "mappedType": "text"
+        },
+        "fundador": {
+          "name": "fundador",
+          "type": "text",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": true,
+          "default": "''",
+          "mappedType": "text"
+        },
+        "co_fundadores": {
+          "name": "co_fundadores",
+          "type": "text",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": true,
+          "default": "''",
           "mappedType": "text"
         }
       },
-      "name": "comando",
+      "name": "equipe",
       "schema": "public",
       "indexes": [
         {
           "columnNames": [
-            "google_id"
+            "nome_equipe"
           ],
           "composite": false,
-          "keyName": "comando_google_id_unique",
+          "keyName": "equipe_nome_equipe_unique",
           "constraint": true,
           "primary": false,
           "unique": true
         },
+        {
+          "keyName": "equipe_pkey",
+          "columnNames": [
+            "id"
+          ],
+          "composite": false,
+          "constraint": true,
+          "primary": true,
+          "unique": true
+        }
+      ],
+      "checks": [],
+      "foreignKeys": {},
+      "nativeEnums": {}
+    },
+    {
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "mappedType": "uuid"
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamptz",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "length": 6,
+          "mappedType": "datetime"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamptz",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "length": 6,
+          "mappedType": "datetime"
+        },
+        "nome_jogo": {
+          "name": "nome_jogo",
+          "type": "text",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": true,
+          "default": "''",
+          "mappedType": "text"
+        },
+        "data_jogo": {
+          "name": "data_jogo",
+          "type": "text",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": true,
+          "default": "''",
+          "mappedType": "text"
+        },
+        "local_jogo": {
+          "name": "local_jogo",
+          "type": "text",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": true,
+          "default": "''",
+          "mappedType": "text"
+        },
+        "descricao_jogo": {
+          "name": "descricao_jogo",
+          "type": "text",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": true,
+          "default": "''",
+          "mappedType": "text"
+        },
+        "hora_inicio": {
+          "name": "hora_inicio",
+          "type": "text",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": true,
+          "default": "''",
+          "mappedType": "text"
+        },
+        "hora_fim": {
+          "name": "hora_fim",
+          "type": "text",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": true,
+          "default": "''",
+          "mappedType": "text"
+        },
+        "localizacao": {
+          "name": "localizacao",
+          "type": "text",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": true,
+          "default": "''",
+          "mappedType": "text"
+        },
+        "confirmations": {
+          "name": "confirmations",
+          "type": "jsonb",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": true,
+          "default": "'[]'",
+          "mappedType": "json"
+        },
+        "status": {
+          "name": "status",
+          "type": "text",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": true,
+          "default": "'scheduled'",
+          "mappedType": "text"
+        }
+      },
+      "name": "jogos",
+      "schema": "public",
+      "indexes": [
         {
           "columnNames": [
-            "email"
+            "nome_jogo"
           ],
           "composite": false,
-          "keyName": "comando_email_unique",
+          "keyName": "jogos_nome_jogo_unique",
           "constraint": true,
           "primary": false,
           "unique": true
         },
         {
-          "keyName": "comando_pkey",
+          "keyName": "jogos_pkey",
           "columnNames": [
             "id"
           ],

@@ -1,15 +1,34 @@
+import { useEffect, useState } from "react";
+
 const emblemImage = "/path_gost.svg";
 
 export default function Inicio() {
+    const [teamImage, setTeamImage] = useState<string | null>(null);
+
+    useEffect(() => {
+        let cancelled = false;
+        (async () => {
+            try {
+                const res = await fetch("/api/equipe");
+                const data = await res.json();
+                const first = Array.isArray(data) ? (data[0] || null) : null;
+                if (!cancelled && first?.imagem_url) setTeamImage(first.imagem_url as string);
+            } catch {
+                // ignore
+            }
+        })();
+        return () => { cancelled = true; };
+    }, []);
+
     return (
         <section id="inicio" data-section-key="inicio">
             <h1 className="text-4xl font-bold text-slate-800 mb-6">ESTATUTO DE CONDUTA E OPERAÇÃO DO GOST</h1>
             <div className="bg-white p-8 rounded-lg shadow-lg border border-gray-200">
                 <div className="mb-6 flex justify-center">
                     <img
-                        src={emblemImage}
+                        src={teamImage || emblemImage}
                         alt="Emblema oficial da GOST"
-                        className="h-60 w-60 object-cover rounded-md"
+                        className="h-60 w-60 object-contain rounded-md"
                     />
                 </div>
                 <h2 className="text-2xl font-semibold text-slate-700 text-center mb-4">Grupamento Operacional de Supressão Tatica</h2>

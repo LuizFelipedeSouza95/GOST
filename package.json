@@ -11,9 +11,10 @@
         "build": "npm run build:server && vite build",
         "dev": "vite",
         "preview": "vite preview --strictPort --port 5173",
-        "migration:create": "tsx ./node_modules/@mikro-orm/cli/cli.js migration:create",
-        "migration:up": "tsx ./node_modules/@mikro-orm/cli/cli.js migration:up",
-        "migration:down": "tsx ./node_modules/@mikro-orm/cli/cli.js migration:down"
+        "migration:create": "tsx ./node_modules/@mikro-orm/cli/cli.js migration:create --config ./server/mikro-orm.config.ts",
+        "migration:up": "tsx ./node_modules/@mikro-orm/cli/cli.js migration:up --config ./server/mikro-orm.config.ts",
+        "migration:down": "tsx ./node_modules/@mikro-orm/cli/cli.js migration:down --config ./server/mikro-orm.config.ts",
+        "migration:update": "tsx ./node_modules/@mikro-orm/cli/cli.js migration:update --config ./server/mikro-orm.config.ts"
     },
     "resolutions": {
         "strip-ansi": "6.0.1"
