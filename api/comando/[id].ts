@@ -1,6 +1,6 @@
 // @ts-nocheck
 import { getEm } from '../_utils/orm.js';
-import { Comando } from '../../src/entities/comando.entity';
+import { importAny } from '../_utils/resolve';
 
 export default async function handler(req: any, res: any) {
 	const { id } = req.query || {};
@@ -10,6 +10,7 @@ export default async function handler(req: any, res: any) {
 	}
 	try {
 		const em = await getEm();
+		const { Comando } = await importAny(['../../dist/entities/comando.entity.js', '../../src/entities/comando.entity']);
 		const registro = await em.findOne(Comando, { id });
 		if (!registro) {
 			res.status(404).json({ error: "Não encontrado" });
@@ -38,5 +39,3 @@ export default async function handler(req: any, res: any) {
 		res.status(500).json({ error: "Erro interno" });
 	}
 }
-
-

@@ -1,7 +1,6 @@
 // @ts-nocheck
 import { getEm } from '../_utils/orm.js';
-import { Squads } from '../../src/entities/squads.entity';
-import { Usuario } from '../../src/entities/usuarios.entity';
+import { importAny } from '../_utils/resolve';
 
 export default async function handler(req: any, res: any) {
 	const { id } = req.query || {};
@@ -11,6 +10,7 @@ export default async function handler(req: any, res: any) {
 	}
 	try {
 		const em = await getEm();
+		const { Squads } = await importAny(['../../dist/entities/squads.entity.js', '../../src/entities/squads.entity']);
 		const registro = await em.findOne(Squads, { id });
 		if (!registro) {
 			res.status(404).json({ error: 'Não encontrado' });
@@ -29,6 +29,7 @@ export default async function handler(req: any, res: any) {
 				const ids = body.comando_geral ?? body.comando_geral_id ?? [];
 				if (Array.isArray(ids) && ids.length) {
 					const em2 = await getEm();
+					const { Usuario } = await importAny(['../../dist/entities/usuarios.entity.js', '../../src/entities/usuarios.entity']);
 					const us = await em2.find(Usuario, { id: { $in: ids } as any });
 					(registro as any).comando_geral = us.map(u => u.name || u.email);
 				} else {
@@ -41,6 +42,7 @@ export default async function handler(req: any, res: any) {
 				const idCmd = body.comando_squad ?? body.comando_squad_id ?? null;
 				if (idCmd) {
 					const em2 = await getEm();
+					const { Usuario } = await importAny(['../../dist/entities/usuarios.entity.js', '../../src/entities/usuarios.entity']);
 					const u = await em2.findOne(Usuario, { id: idCmd });
 					(registro as any).comando_squad = u ? (u.name || u.email) : null;
 				} else {

@@ -1,16 +1,18 @@
 // @ts-nocheck
 import { getEm } from './_utils/orm.js';
-import { Comando } from '../src/entities/comando.entity';
+import { importAny } from './_utils/resolve';
 
 export default async function handler(req: any, res: any) {
 	try {
 		if (req.method === 'GET') {
 			const em = await getEm();
+			const { Comando } = await importAny(['../dist/entities/comando.entity.js', '../src/entities/comando.entity']);
 			const list = await em.find(Comando, {}, { limit: 50, orderBy: { createdAt: 'desc' } as any });
 			res.status(200).json(list);
 			return;
 		}
 		if (req.method === 'POST') {
+			const { Comando } = await importAny(['../dist/entities/comando.entity.js', '../src/entities/comando.entity']);
 			const { email, name, classe, data_admissao_gost, patent } = req.body || {};
 			if (!email) {
 				res.status(400).json({ error: 'Email é obrigatório' });

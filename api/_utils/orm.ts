@@ -1,6 +1,6 @@
 // @ts-nocheck
 import { MikroORM } from '@mikro-orm/core';
-import ormConfig from '../../src/config/orm';
+import { importAny } from './resolve';
 
 let ormInstance: MikroORM | null = null;
 
@@ -10,7 +10,9 @@ export async function getOrm(): Promise<MikroORM> {
 		throw new Error('DATABASE_URL (ou GOST_DATABASE_URL) não definido no ambiente');
 	}
 	if (ormInstance) return ormInstance;
-	ormInstance = await MikroORM.init(ormConfig);
+	const cfgMod: any = await importAny(['../../dist/config/orm.js', '../../src/config/orm']);
+	const cfg = cfgMod?.default || cfgMod;
+	ormInstance = await MikroORM.init(cfg);
 	return ormInstance;
 }
 
