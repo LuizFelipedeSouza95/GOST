@@ -1,5 +1,5 @@
 import { MikroORM } from '@mikro-orm/core';
-import ormConfig from '../../src/config/orm.js';
+import ormConfig from '../../src/config/orm';
 
 let ormInstance: MikroORM | null = null;
 
@@ -17,5 +17,3 @@ export async function getEm() {
 	const orm = await getOrm();
 	return orm.em.fork();
 }
-
-

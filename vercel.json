@@ -4,5 +4,10 @@
 	"outputDirectory": "dist",
 	"rewrites": [
 		{ "source": "/((?!api).*)", "destination": "/index.html" }
-	]
+	],
+	"functions": {
+		"api/**/*.{js,ts}": {
+			"runtime": "nodejs20.x"
+		}
+	}
 }
