@@ -7,7 +7,6 @@
     ],
     "functions": {
         "api/**/*.{js,ts}": {
-            "runtime": "nodejs22.x",
             "includeFiles": "server/**"
         }
     }
