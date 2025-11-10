@@ -1,6 +1,6 @@
 // @ts-nocheck
 import { MikroORM } from '@mikro-orm/core';
-import { importAny } from './resolve';
+import { importAny } from './resolve.js';
 
 let ormInstance: MikroORM | null = null;
 

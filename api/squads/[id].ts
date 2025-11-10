@@ -1,6 +1,6 @@
 // @ts-nocheck
 import { getEm } from '../_utils/orm.js';
-import { importAny } from '../_utils/resolve';
+import { importAny } from '../_utils/resolve.js';
 
 export default async function handler(req: any, res: any) {
 	const { id } = req.query || {};
