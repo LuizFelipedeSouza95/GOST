@@ -1,6 +1,6 @@
 // @ts-nocheck
 import { MikroORM } from '@mikro-orm/core';
-import ormConfig from '../../src/config/orm.js';
+import ormConfig from '../../src/config/orm';
 
 let ormInstance: MikroORM | null = null;
 
