@@ -202,7 +202,7 @@ export default function Sidebar({ active, onChange, open = false, onClose }: Pro
                     <a href="/"><img src="/path_gost.svg" alt="Logo GOST" className="w-10 h-10 object-cover rounded-md" /></a>
                     <span className="text-2xl font-bold text-white">GOST</span><br />
                 </div>
-                {/* <span className="text-lg text-white italic text-center mb-4">Grupamento Operacional de Supressão Tatica</span> */}
+                <span className="text-lg text-white italic text-center">Grupamento Operacional de Supressão Tatica</span>
             </div>
             <div className="flex-1 overflow-y-auto">
                 <ul id="desktop-nav">
@@ -226,7 +226,16 @@ export default function Sidebar({ active, onChange, open = false, onClose }: Pro
             </div>
             {/* Rodapé com login */}
             <div className="border-t border-slate-700 p-4">
-                <div className="flex items-center gap-3 mb-3 cursor-pointer" onClick={handleAccessClick}>
+                <div
+                    className="flex items-center gap-3 mb-3 cursor-pointer"
+                    onClick={() => {
+                        if (currentUser) {
+                            setUserOpen((v) => !v);
+                        } else {
+                            handleAccessClick();
+                        }
+                    }}
+                >
                     {avatarUrl ? (
                         <img
                             src={avatarUrl}
@@ -245,6 +254,32 @@ export default function Sidebar({ active, onChange, open = false, onClose }: Pro
                     )}
                     <span className="text-sm text-white">{currentUser?.name ? currentUser.name : "Acessar"}</span>
                 </div>
+                {currentUser && userOpen && (
+                    <div className="mb-3 -mt-2">
+                        <button
+                            className="w-full text-left px-4 py-2 text-sm rounded hover:bg-slate-800"
+                            onClick={() => {
+                                try {
+                                    // revoga sessão Google se disponível
+                                    const email = currentUser?.email;
+                                    if ((window as any).google?.accounts?.id?.disableAutoSelect) {
+                                        (window as any).google.accounts.id.disableAutoSelect();
+                                    }
+                                    if (email && (window as any).google?.accounts?.id?.revoke) {
+                                        try { (window as any).google.accounts.id.revoke(email, () => { }); } catch { }
+                                    }
+                                } catch { }
+                                try { localStorage.removeItem("currentUser"); } catch { }
+                                setCurrentUser(null);
+                                setAvatarUrl(null);
+                                setUserOpen(false);
+                                onClose?.();
+                            }}
+                        >
+                            Sair
+                        </button>
+                    </div>
+                )}
                 {canSeeConfig && (
                     <button
                         className="w-full mb-3 px-3 py-2 text-sm rounded bg-emerald-600 text-white hover:bg-emerald-700 text-left"

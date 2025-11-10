@@ -165,25 +165,28 @@ export default function App() {
     return (
         <div className="min-h-screen flex font-sans bg-slate-100 ml-5">
             <MobileHeader active={activeSection} onChange={handleNavChange} />
-            {/* Botão global para abrir sidebar */}
-            <button
-                aria-label="Abrir menu"
-                className="fixed top-3 left-3 z-[1600] p-2 rounded bg-slate-900 text-white shadow hover:bg-slate-800"
-                aria-expanded={sidebarOpen}
-                onClick={() => setSidebarOpen((v) => !v)}
-            >
-                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-6 h-6">
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" />
-                </svg>
-            </button>
-            {/* Overlay */}
-            {sidebarOpen && (
-                <div
-                    className="fixed inset-0 bg-black/40 z-[1499]"
-                    onClick={() => setSidebarOpen(false)}
-                />
-            )}
-            <Sidebar active={activeSection} onChange={handleNavChange} open={sidebarOpen} onClose={() => setSidebarOpen(false)} />
+            {/* Menu desktop (escondido no mobile) */}
+            <div className="hidden md:block">
+                {/* Botão global para abrir sidebar (apenas desktop, se desejar colapsar) */}
+                <button
+                    aria-label="Abrir menu"
+                    className="fixed top-3 left-3 z-[1600] p-2 rounded bg-slate-900 text-white shadow hover:bg-slate-800"
+                    aria-expanded={sidebarOpen}
+                    onClick={() => setSidebarOpen((v) => !v)}
+                >
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-6 h-6">
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" />
+                    </svg>
+                </button>
+                {/* Overlay desktop opcional */}
+                {sidebarOpen && (
+                    <div
+                        className="fixed inset-0 bg-black/20 z-[1499]"
+                        onClick={() => setSidebarOpen(false)}
+                    />
+                )}
+                <Sidebar active={activeSection} onChange={handleNavChange} open={sidebarOpen} onClose={() => setSidebarOpen(false)} />
+            </div>
             <main
                 ref={mainRef}
                 className="flex-1 mt-16 md:mt-0 overflow-y-auto h-[calc(100vh-4rem)] md:h-screen snap-y snap-proximity"

@@ -1,4 +1,4 @@
-import { getEm } from '../_utils/orm';
+import { getEm } from '../_utils/orm.js';
 import { Comando } from '../../src/entities/comando.entity';
 
 export default async function handler(req: any, res: any) {

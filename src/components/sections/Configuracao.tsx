@@ -434,59 +434,96 @@ export default function Configuracao() {
 					{loadingUsers ? (
 						<p className="text-slate-600">Carregando...</p>
 					) : (
-						<div className="overflow-x-auto">
-							<table className="min-w-full text-sm">
-								<thead className="text-left text-slate-500 border-b">
-									<tr>
-										<th className="py-2 pr-4">Nome</th>
-										<th className="py-2 pr-4">Email</th>
-										<th className="py-2 pr-4">Patente</th>
-										<th className="py-2 pr-4">Ação</th>
-										<th className="py-2 pr-4">Ativo</th>
-									</tr>
-								</thead>
-								<tbody>
-									{users.map((u) => (
-										<tr key={u.id} className="border-b last:border-0">
-											<td className="py-2 pr-4">{u.name || "-"}</td>
-											<td className="py-2 pr-4">{u.email}</td>
-											<td className="py-2 pr-4 capitalize">{u.patent || "soldado"}</td>
-											<td className="py-2 pr-4">
-												<button
-													aria-label="Editar"
-													className="p-2 rounded hover:bg-slate-100"
-													onClick={() => openEdit(u.id)}
-												>
-													<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-5 h-5 text-slate-700">
-														<path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04a1 1 0 0 0 0-1.41l-2.34-2.34a1 1 0 0 0-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z" />
-													</svg>
-												</button>
-											</td>
-											<td className="py-2 pr-4">
-												<label className="inline-flex items-center gap-2 cursor-pointer select-none">
-													<input
-														type="checkbox"
-														checked={!!u.active}
-														onChange={async (e) => {
-															// Abre modal de confirmação em vez de salvar direto
-															setConfirmUserId(u.id);
-															setConfirmNextActive(e.currentTarget.checked);
-															setConfirmActiveOpen(true);
-														}}
-													/>
-													<span className={`text-xs ${u.active ? "text-emerald-700" : "text-slate-500"}`}>{u.active ? "Ativo" : "Inativo"}</span>
-												</label>
-											</td>
-											<td className="py-2 pr-4 text-xs">
-												{rowMsgByUser[u.id] && (
-													<span className="text-slate-600">{rowMsgByUser[u.id]}</span>
-												)}
-											</td>
+						<>
+							<div className="hidden md:block overflow-x-auto">
+								<table className="min-w-full text-sm">
+									<thead className="text-left text-slate-500 border-b">
+										<tr>
+											<th className="py-2 pr-4">Nome</th>
+											<th className="py-2 pr-4">Email</th>
+											<th className="py-2 pr-4">Patente</th>
+											<th className="py-2 pr-4">Ação</th>
+											<th className="py-2 pr-4">Ativo</th>
 										</tr>
-									))}
-								</tbody>
-							</table>
-						</div>
+									</thead>
+									<tbody>
+										{users.map((u) => (
+											<tr key={u.id} className="border-b last:border-0">
+												<td className="py-2 pr-4">{u.name || "-"}</td>
+												<td className="py-2 pr-4">{u.email}</td>
+												<td className="py-2 pr-4 capitalize">{u.patent || "soldado"}</td>
+												<td className="py-2 pr-4">
+													<button
+														aria-label="Editar"
+														className="p-2 rounded hover:bg-slate-100"
+														onClick={() => openEdit(u.id)}
+													>
+														<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-5 h-5 text-slate-700">
+															<path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04a1 1 0 0 0 0-1.41l-2.34-2.34a1 1 0 0 0-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z" />
+														</svg>
+													</button>
+												</td>
+												<td className="py-2 pr-4">
+													<label className="inline-flex items-center gap-2 cursor-pointer select-none">
+														<input
+															type="checkbox"
+															checked={!!u.active}
+															onChange={async (e) => {
+																setConfirmUserId(u.id);
+																setConfirmNextActive(e.currentTarget.checked);
+																setConfirmActiveOpen(true);
+															}}
+														/>
+														<span className={`text-xs ${u.active ? "text-emerald-700" : "text-slate-500"}`}>{u.active ? "Ativo" : "Inativo"}</span>
+													</label>
+												</td>
+												<td className="py-2 pr-4 text-xs">
+													{rowMsgByUser[u.id] && (
+														<span className="text-slate-600">{rowMsgByUser[u.id]}</span>
+													)}
+												</td>
+											</tr>
+										))}
+									</tbody>
+								</table>
+							</div>
+							<div className="md:hidden grid gap-3">
+								{users.map((u) => (
+									<div key={u.id} className="rounded-lg border border-slate-200 bg-white p-4 shadow-sm">
+										<div className="flex items-start justify-between">
+											<div>
+												<div className="font-semibold text-slate-800 text-sm">{u.name || "-"}</div>
+												<div className="text-slate-600 text-xs break-all">{u.email}</div>
+											</div>
+											<button
+												aria-label="Editar"
+												className="p-2 rounded hover:bg-slate-100"
+												onClick={() => openEdit(u.id)}
+											>
+												<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-5 h-5 text-slate-700">
+													<path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04a1 1 0 0 0 0-1.41l-2.34-2.34a1 1 0 0 0-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z" />
+												</svg>
+											</button>
+										</div>
+										<div className="mt-2 flex items-center justify-between">
+											<span className="text-xs capitalize text-slate-700">{u.patent || "soldado"}</span>
+											<label className="inline-flex items-center gap-2 cursor-pointer select-none">
+												<input
+													type="checkbox"
+													checked={!!u.active}
+													onChange={(e) => {
+														setConfirmUserId(u.id);
+														setConfirmNextActive(e.currentTarget.checked);
+														setConfirmActiveOpen(true);
+													}}
+												/>
+												<span className={`text-xs ${u.active ? "text-emerald-700" : "text-slate-500"}`}>{u.active ? "Ativo" : "Inativo"}</span>
+											</label>
+										</div>
+									</div>
+								))}
+							</div>
+						</>
 					)}
 				</div>
 
@@ -494,7 +531,7 @@ export default function Configuracao() {
 				{editOpen && (
 					<div className="fixed inset-0 z-[2000] flex items-center justify-center">
 						<div className="absolute inset-0 bg-black/40" onClick={() => setEditOpen(false)}></div>
-						<div className="relative bg-white rounded-lg shadow-xl w-full max-w-2xl p-6">
+						<div className="relative bg-white rounded-lg shadow-xl w-[calc(100%-2rem)] max-w-lg p-4 sm:w-full sm:max-w-2xl sm:p-6 mx-2">
 							<div className="flex items-center justify-between mb-4">
 								<h4 className="text-lg font-semibold">Editar usuário</h4>
 								<button className="p-2 rounded hover:bg-slate-100" onClick={() => setEditOpen(false)} aria-label="Fechar">
@@ -708,23 +745,61 @@ export default function Configuracao() {
 					{loadingSquads ? (
 						<p className="text-slate-600">Carregando...</p>
 					) : (
-						<div className="overflow-x-auto">
-							<table className="min-w-full text-sm">
-								<thead className="text-left text-slate-500 border-b">
-									<tr>
-										<th className="py-2 pr-4">Nome</th>
-										<th className="py-2 pr-4">Comando Geral</th>
-										<th className="py-2 pr-4">Comandante</th>
-										<th className="py-2 pr-4">Ação</th>
-									</tr>
-								</thead>
-								<tbody>
-									{(squads || []).map((s) => (
-										<tr key={s.id} className="border-b last:border-0">
-											<td className="py-2 pr-4">{s.nome || "-"}</td>
-											<td className="py-2 pr-4">{s.comando_geral.join(", ")}</td>
-											<td className="py-2 pr-4">{s.comando_squad || "-"}</td>
-											<td className="py-2 pr-4">
+						<>
+							<div className="hidden md:block overflow-x-auto">
+								<table className="min-w-full text-sm">
+									<thead className="text-left text-slate-500 border-b">
+										<tr>
+											<th className="py-2 pr-4">Nome</th>
+											<th className="py-2 pr-4">Comando Geral</th>
+											<th className="py-2 pr-4">Comandante</th>
+											<th className="py-2 pr-4">Ação</th>
+										</tr>
+									</thead>
+									<tbody>
+										{(squads || []).map((s) => (
+											<tr key={s.id} className="border-b last:border-0">
+												<td className="py-2 pr-4">{s.nome || "-"}</td>
+												<td className="py-2 pr-4">{s.comando_geral.join(", ")}</td>
+												<td className="py-2 pr-4">{s.comando_squad || "-"}</td>
+												<td className="py-2 pr-4">
+													<button
+														aria-label="Editar"
+														className="p-2 rounded hover:bg-slate-100"
+														onClick={() => openSquadEdit(s.id)}
+													>
+														<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-5 h-5 text-slate-700">
+															<path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04a1 1 0 0 0 0-1.41l-2.34-2.34a1 1 0 0 0-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z" />
+														</svg>
+													</button>
+													<button
+														aria-label="Excluir"
+														className="p-2 rounded hover:bg-red-50 ml-1"
+														onClick={() => {
+															setConfirmSquadId(s.id);
+															setConfirmSquadName(s.nome || "");
+															setConfirmSquadOpen(true);
+														}}
+													>
+														<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="w-5 h-5 text-red-600">
+															<path strokeLinecap="round" strokeLinejoin="round" d="M6 7h12M9 7V5a2 2 0 012-2h2a2 2 0 012 2v2m1 0v12a2 2 0 01-2 2H8a2 2 0 01-2-2V7h10z" />
+														</svg>
+													</button>
+												</td>
+											</tr>
+										))}
+									</tbody>
+								</table>
+							</div>
+							<div className="md:hidden grid gap-3">
+								{(squads || []).map((s) => (
+									<div key={s.id} className="rounded-lg border border-slate-200 bg-white p-4 shadow-sm">
+										<div className="flex items-start justify-between">
+											<div>
+												<div className="font-semibold text-slate-800 text-sm">{s.nome || "-"}</div>
+												<div className="text-slate-600 text-xs">{s.comando_squad || "-"}</div>
+											</div>
+											<div className="flex items-center gap-1">
 												<button
 													aria-label="Editar"
 													className="p-2 rounded hover:bg-slate-100"
@@ -736,7 +811,7 @@ export default function Configuracao() {
 												</button>
 												<button
 													aria-label="Excluir"
-													className="p-2 rounded hover:bg-red-50 ml-1"
+													className="p-2 rounded hover:bg-red-50"
 													onClick={() => {
 														setConfirmSquadId(s.id);
 														setConfirmSquadName(s.nome || "");
@@ -747,12 +822,15 @@ export default function Configuracao() {
 														<path strokeLinecap="round" strokeLinejoin="round" d="M6 7h12M9 7V5a2 2 0 012-2h2a2 2 0 012 2v2m1 0v12a2 2 0 01-2 2H8a2 2 0 01-2-2V7h10z" />
 													</svg>
 												</button>
-											</td>
-										</tr>
-									))}
-								</tbody>
-							</table>
-						</div>
+											</div>
+										</div>
+										<div className="mt-2 text-xs text-slate-600">
+											<span className="font-medium text-slate-700">Comando Geral:</span> {s.comando_geral.join(", ")}
+										</div>
+									</div>
+								))}
+							</div>
+						</>
 					)}
 				</div>
 
@@ -760,7 +838,7 @@ export default function Configuracao() {
 				{squadModalOpen && (
 					<div className="fixed inset-0 z-[2000] flex items-center justify-center">
 						<div className="absolute inset-0 bg-black/40" onClick={() => setSquadModalOpen(false)}></div>
-						<div className="relative bg-white rounded-lg shadow-xl w-full max-w-md p-6">
+						<div className="relative bg-white rounded-lg shadow-xl w-[calc(100%-2rem)] max-w-md p-4 sm:p-6 mx-2">
 							<div className="flex items-center justify-between mb-4">
 								<h4 className="text-lg font-semibold">{squadIsCreate ? "Criar squad" : "Editar squad"}</h4>
 								<button className="p-2 rounded hover:bg-slate-100" onClick={() => setSquadModalOpen(false)} aria-label="Fechar">

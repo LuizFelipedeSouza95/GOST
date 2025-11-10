@@ -40,7 +40,7 @@ function PersonNode({ name, color, picture }: { name: string; color: "rose" | "a
                     }}
                 />
             </div>
-            <div className="mt-1 text-[11px] leading-none text-slate-700 text-center">{name}</div>
+            <div className="mt-1 text-[11px] leading-none text-slate-700 text-center break-words max-w-full">{name}</div>
         </div>
     );
 }
@@ -79,15 +79,14 @@ export default function Membros() {
         load();
     }, []);
     return (
-        <section id="membros">
+        <section id="membros" className="overflow-x-hidden">
             <h1 className="text-4xl font-bold text-slate-800 mb-6">Membros e Cadeia de Comando</h1>
 
             <div className="bg-white rounded-lg shadow-lg p-6 border border-gray-200">
                 {loading && <p className="text-slate-600">Carregando...</p>}
                 {error && <p className="text-red-600 text-sm">{error}</p>}
-                <div className="mb-4 flex items-start justify-between gap-4">
+                <div className="mb-4 flex flex-wrap items-start justify-between gap-4">
                     <h2 className="text-2xl font-semibold text-slate-700">Árvore Hierárquica</h2>
-                    {/* <span className="text-xs px-2 py-1 rounded bg-emerald-50 text-emerald-700 border border-emerald-200">Legenda no topo</span> */}
                 </div>
 
                 {/* Legenda simples */}
@@ -104,7 +103,16 @@ export default function Membros() {
                 </div>
 
                 {/* Árvore dinâmica a partir do banco */}
-                {!loading && !error && <Hierarquia data={usuarios} />}
+                {!loading && !error && (
+                    <>
+                        <div className="hidden md:block">
+                            <Hierarquia data={usuarios} />
+                        </div>
+                        <div className="md:hidden overflow-x-hidden">
+                            <HierarquiaMobile data={usuarios} />
+                        </div>
+                    </>
+                )}
             </div>
         </section>
     );
@@ -167,6 +175,58 @@ function Hierarquia({ data }: { data: DbUser[] }) {
                     </div>
                 ))}
             </div>
+        </div>
+    );
+}
+
+function HierarquiaMobile({ data }: { data: DbUser[] }) {
+    const byPatent = {
+        comando: data.filter((u) => u.patent === "comando"),
+        squads: data.filter((u) => u.patent === "comando_squad"),
+        soldados: data.filter((u) => u.patent === "soldado")
+    };
+    const squadsByComando: Record<string, DbUser[]> = {};
+    byPatent.comando.forEach((c) => {
+        squadsByComando[c.id] = byPatent.squads.filter((s) => s.comando_geral_id.includes(c.id));
+    });
+    const soldadosBySquadCmd: Record<string, DbUser[]> = {};
+    byPatent.squads.forEach((s) => {
+        soldadosBySquadCmd[s.id] = byPatent.soldados.filter((u) => u.comando_squad_id === s.id);
+    });
+
+    return (
+        <div className="grid gap-3 overflow-x-hidden">
+            {byPatent.comando.map((c) => (
+                <div key={c.id} className="rounded-lg border border-slate-200 bg-white p-4 shadow-sm w-full">
+                    <div className="flex items-center gap-3 min-w-0">
+                        <div className="shrink-0"><UserIcon /></div>
+                        <div className="flex-1 min-w-0">
+                            <div className="text-sm font-semibold text-slate-800 break-words">{c.name || c.email}</div>
+                            <div className="text-[11px] text-rose-600">Comando</div>
+                        </div>
+                    </div>
+                    {squadsByComando[c.id]?.length ? (
+                        <div className="mt-3">
+                            <div className="text-xs font-medium text-slate-700 mb-1">Comandos de squad</div>
+                            <div className="grid gap-2">
+                                {squadsByComando[c.id].map((sq) => (
+                                    <div key={sq.id} className="rounded border border-slate-200 p-2">
+                                        <div className="flex items-center justify-between gap-2">
+                                            <div className="text-xs font-semibold text-slate-800 break-words">{sq.name || sq.email}</div>
+                                            <span className="text-[11px] text-amber-600">Comando de squad</span>
+                                        </div>
+                                        {soldadosBySquadCmd[sq.id]?.length ? (
+                                            <div className="mt-1 text-[11px] text-slate-600">{soldadosBySquadCmd[sq.id].length} soldados</div>
+                                        ) : (
+                                            <div className="mt-1 text-[11px] text-slate-400">Sem soldados</div>
+                                        )}
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    ) : null}
+                </div>
+            ))}
         </div>
     );
 }

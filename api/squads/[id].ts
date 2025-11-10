@@ -1,4 +1,4 @@
-import { getEm } from '../_utils/orm';
+import { getEm } from '../_utils/orm.js';
 import { Squads } from '../../src/entities/squads.entity';
 import { Usuario } from '../../src/entities/usuarios.entity';
 
