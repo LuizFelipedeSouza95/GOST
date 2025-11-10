@@ -1,5 +1,5 @@
 // @ts-nocheck
-import { getEm } from './_utils/orm';
+import { getEm } from './_utils/orm.js';
 import { Usuario } from '../server/entities/usuarios.entity';
 
 export default async function handler(req: any, res: any) {

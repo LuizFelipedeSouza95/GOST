@@ -1,5 +1,5 @@
 // @ts-nocheck
-import { getEm } from '../_utils/orm';
+import { getEm } from '../_utils/orm.js';
 import { Squads } from '../../server/entities/squads.entity';
 import { Usuario } from '../../server/entities/usuarios.entity';
 
