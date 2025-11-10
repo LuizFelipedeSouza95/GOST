@@ -1,7 +1,7 @@
 // @ts-nocheck
 import { OAuth2Client } from 'google-auth-library';
 import { getEm } from '../_utils/orm.js';
-import { Usuario } from '../../server/entities/usuarios.entity.js';
+import { Usuario } from '../../server/entities/usuarios.entity';
 
 export default async function handler(req: any, res: any) {
 	// CORS headers (dev/prod)

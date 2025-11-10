@@ -1,19 +1,22 @@
 {
   "compilerOptions": {
     "target": "ES2020",
-    "module": "ESNext",
-    "moduleResolution": "bundler",
-    "rootDir": "./src",
-    "outDir": "./server",
-    "noEmit": false,
-    "declaration": false,
-    "emitDecoratorMetadata": true,
+    // Configurações cruciais para o Node.js/Backend:
+    "module": "CommonJS", 
+    "moduleResolution": "node", // Usar 'node' é mais seguro para backend do que 'bundler'
+    "outDir": "./dist/server",
+    "rootDir": ".",
+    "baseUrl": ".",
+    "paths": {
+      "server/*": ["./server/*"] // Alias CRUCIAL para resolver entidades
+    },
+    // Configurações do seu ORM (MikroORM usa decorators):
     "experimentalDecorators": true,
+    "emitDecoratorMetadata": true,
     "esModuleInterop": true,
-    "skipLibCheck": true,
-    "strict": true,
-    "sourceMap": false
+    "strict": true
   },
-  "include": ["src/**/*.ts"]
+  // Inclua as funções API e as entidades do servidor
+  "include": ["api/**/*", "server/**/*"], 
+  "exclude": ["node_modules", "dist", "src"] // EXCLUA 'src' (Frontend)
 }
-
