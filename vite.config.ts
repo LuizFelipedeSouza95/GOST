@@ -34,7 +34,7 @@ function devApiPlugin() {
                 return async () => {
                     if (!ormPromise) {
                         const { MikroORM } = await import("@mikro-orm/core");
-                        const ormCfg = (await import("./src/config/orm")).default;
+                        const ormCfg = (await import("./server/config/orm")).default;
                         ormPromise = MikroORM.init(ormCfg);
                     }
                     const orm = await ormPromise;
@@ -133,7 +133,7 @@ function devApiPlugin() {
                             return;
                         }
                         const em2 = await getEm();
-                        const { Usuario } = await import("./src/entities/usuarios.entity");
+                        const { Usuario } = await import("./server/entities/usuarios.entity.js");
                         let user = await em2.findOne(Usuario, { email });
                         if (user && (user as any).active === false) {
                             expressLikeRes.status(403).json({ error: "Usuário inativo" });
@@ -183,9 +183,9 @@ function devApiPlugin() {
                     const em = await getEm();
 
                     // Importa entidades on-demand
-                    const { Usuario } = await import("./src/entities/usuarios.entity");
-                    const { Comando } = await import("./src/entities/comando.entity");
-                    const { Squads } = await import("./src/entities/squads.entity");
+                    const { Usuario } = await import("./server/entities/usuarios.entity.js");
+                    const { Comando } = await import("./server/entities/comando.entity.js");
+                    const { Squads } = await import("./server/entities/squads.entity.js");
 
                     const send = (code: number, body: any) => {
                         res.statusCode = code;

@@ -1,7 +1,7 @@
 // @ts-nocheck
 import 'reflect-metadata';
 import { MikroORM } from '@mikro-orm/core';
-import ormConfig from '../../server/config/orm';
+import ormConfig from '../../server/config/orm.js';
 
 let ormInstance: MikroORM | null = null;
 

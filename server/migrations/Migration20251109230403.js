@@ -2,7 +2,7 @@ import { Migration } from '@mikro-orm/migrations';
 
 export class Migration20251109230403 extends Migration {
 
-  override async up(): Promise<void> {
+  async up() {
     this.addSql(`create table "comando" ("id" uuid not null, "created_at" timestamptz not null, "updated_at" timestamptz not null, "google_id" text null, "email" text not null, "name" text null, "picture" text null, "roles" jsonb not null default '["user"]', "last_login" timestamptz null, "password" text null, "classe" text null default '', "data_admissao_gost" text null default '', "patent" text null default 'comando', constraint "comando_pkey" primary key ("id"));`);
     this.addSql(`alter table "comando" add constraint "comando_google_id_unique" unique ("google_id");`);
     this.addSql(`alter table "comando" add constraint "comando_email_unique" unique ("email");`);
@@ -17,7 +17,7 @@ export class Migration20251109230403 extends Migration {
     this.addSql(`drop table if exists "usuarios" cascade;`);
   }
 
-  override async down(): Promise<void> {
+  async down() {
     this.addSql(`create table "usuarios" ("id" uuid not null, "created_at" timestamptz(6) not null, "updated_at" timestamptz(6) not null, "google_id" text null, "email" text not null, "name" text null, "picture" text null, "roles" jsonb not null default '["user"]', "last_login" timestamptz(6) null, "password" text null, "comando_geral_id" jsonb null, "comando_squad_id" text null, "squad_id" text null, "classe" text null default '', "data_admissao_gost" text null default '', "patent" text null default 'comando', constraint "usuarios_pkey" primary key ("id"));`);
     this.addSql(`alter table "usuarios" add constraint "usuarios_email_unique" unique ("email");`);
     this.addSql(`alter table "usuarios" add constraint "usuarios_google_id_unique" unique ("google_id");`);

@@ -4,7 +4,6 @@ import { getEm } from '../_utils/orm.js';
 import { Usuario } from '../../server/entities/usuarios.entity.js';
 
 export default async function handler(req: any, res: any) {
-	// CORS headers (dev/prod)
 	res.setHeader('Access-Control-Allow-Origin', '*');
 	res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
 	res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');

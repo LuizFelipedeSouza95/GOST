@@ -7,9 +7,9 @@
         "node": "22.x"
     },
     "scripts": {
-        "dev": "vite",
-        "build": "npm run build:server && vite build",
         "build:server": "tsc -p tsconfig.server.json",
+        "build": "npm run build:server && vite build",
+        "dev": "vite",
         "preview": "vite preview --strictPort --port 5173",
         "migration:create": "tsx ./node_modules/@mikro-orm/cli/cli.js migration:create",
         "migration:up": "tsx ./node_modules/@mikro-orm/cli/cli.js migration:up",

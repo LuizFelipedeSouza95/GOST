@@ -1,6 +1,6 @@
 {
     "framework": "vite",
-    "buildCommand": "yarn build",
+    "buildCommand": "npm run build",
     "outputDirectory": "dist",
     "rewrites": [
         {
@@ -9,8 +9,8 @@
         }
     ],
     "functions": {
-        "api/**/*.{js,ts}": {
-            "includeFiles": "server/**/*"
+        "api/**/*": {
+            "includeFiles": "dist/server/**/*"
         }
     }
 }
