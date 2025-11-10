@@ -1,7 +1,7 @@
 // @ts-nocheck
-import { getEm } from '../_utils/orm.js';
-import { Squads } from '../../server/entities/squads.entity.js';
-import { Usuario } from '../../server/entities/usuarios.entity.js';
+import { getEm } from '../_utils/orm';
+import { Squads } from '../../server/entities/squads.entity';
+import { Usuario } from '../../server/entities/usuarios.entity';
 
 export default async function handler(req: any, res: any) {
 	const { id } = req.query || {};

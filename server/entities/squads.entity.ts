@@ -1,15 +1,15 @@
 // src/entities/Usuario.ts
 import { Entity, Property } from '@mikro-orm/core';
-import { BaseEntity } from './base.entity.js';
+import { BaseEntity } from './base.entity';
 
 @Entity({ tableName: 'squads', schema: process.env.DB_SCHEMA || 'public' })
 export class Squads extends BaseEntity {
     @Property({ type: 'text', unique: true, nullable: true })
-    nome = '';
+    nome!: string;
 
     @Property({ type: 'json', nullable: true })
-    comando_geral = [];
+    comando_geral: string[] = [];
 
     @Property({ type: 'text', nullable: true })
-    comando_squad = null;
+    comando_squad: string | null = null;
 }

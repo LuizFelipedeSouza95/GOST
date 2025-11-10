@@ -1,6 +1,6 @@
 // @ts-nocheck
-import { getEm } from './_utils/orm.js';
-import { Usuario } from '../server/entities/usuarios.entity.js';
+import { getEm } from './_utils/orm';
+import { Usuario } from '../server/entities/usuarios.entity';
 
 export default async function handler(req: any, res: any) {
 	try {
@@ -87,5 +87,3 @@ export default async function handler(req: any, res: any) {
 		res.status(500).json({ error: 'Erro interno', detail: err?.message || String(err) });
 	}
 }
-
-

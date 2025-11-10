@@ -1,12 +1,12 @@
 import 'reflect-metadata';
 import 'dotenv/config';
-import { ReflectMetadataProvider } from '@mikro-orm/core';
+import { Options, ReflectMetadataProvider } from '@mikro-orm/core';
 import { PostgreSqlDriver } from '@mikro-orm/postgresql';
-import { Usuario } from '../entities/usuarios.entity.js';
-import { Comando } from '../entities/comando.entity.js';
-import { Squads } from '../entities/squads.entity.js';
+import { Usuario } from '../entities/usuarios.entity';
+import { Comando } from '../entities/comando.entity';
+import { Squads } from '../entities/squads.entity';
 
-const config = {
+const config: Options = {
   migrations: {
     path: './dist/migrations',
     pathTs: './server/migrations',
@@ -22,14 +22,14 @@ const config = {
   driverOptions: (() => {
     const url = process.env.DATABASE_URL || process.env.GOST_DATABASE_URL || '';
     const isLocal = url.includes('localhost') || url.includes('127.0.0.1');
-    if (isLocal) return undefined;
+    if (isLocal) return undefined as any;
     return {
       connection: {
         ssl: {
           rejectUnauthorized: false,
         },
       },
-    };
+    } as any;
   })(),
 };
 

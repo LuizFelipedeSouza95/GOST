@@ -1,6 +1,6 @@
 // @ts-nocheck
-import { getEm } from './_utils/orm.js';
-import { Comando } from '../server/entities/comando.entity.js';
+import { getEm } from './_utils/orm';
+import { Comando } from '../server/entities/comando.entity';
 
 export default async function handler(req: any, res: any) {
 	try {
@@ -42,5 +42,3 @@ export default async function handler(req: any, res: any) {
 		res.status(500).json({ error: 'Erro interno' });
 	}
 }
-
-
