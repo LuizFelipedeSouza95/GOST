@@ -1,8 +1,11 @@
 import type { SectionKey } from "../App";
+import { useEffect, useMemo, useRef, useState } from "react";
 
 type Props = {
     active: SectionKey;
     onChange: (section: SectionKey) => void;
+    open?: boolean;
+    onClose?: () => void;
 };
 
 const items: { key: SectionKey; label: string }[] = [
@@ -12,18 +15,194 @@ const items: { key: SectionKey; label: string }[] = [
     { key: "disciplina", label: "Conduta e Disciplina" },
     { key: "uniformes", label: "Uniformes (Kit GOST)" },
     { key: "briefing", label: "Briefing de Missão" },
-    { key: "logistica", label: "Logística e Horários" }
+    { key: "logistica", label: "Logística e Horários" },
+    { key: "membros", label: "Membros" }
 ];
 
-export default function Sidebar({ active, onChange }: Props) {
+export default function Sidebar({ active, onChange, open = false, onClose }: Props) {
+    const [userOpen, setUserOpen] = useState(false);
+    const userMenuRef = useRef<HTMLDivElement | null>(null);
+    const googleBtnRef = useRef<HTMLDivElement | null>(null);
+    const [currentUser, setCurrentUser] = useState<any | null>(() => {
+        try {
+            const raw = typeof window !== "undefined" ? localStorage.getItem("currentUser") : null;
+            return raw ? JSON.parse(raw) : null;
+        } catch { return null; }
+    });
+    const [avatarUrl, setAvatarUrl] = useState<string | null>(() => {
+        try {
+            const raw = typeof window !== "undefined" ? localStorage.getItem("currentUser") : null;
+            const u = raw ? JSON.parse(raw) : null;
+            return u?.picture || null;
+        } catch { return null; }
+    });
+    const isAdmin = useMemo(() => {
+        return Array.isArray(currentUser?.roles) && currentUser.roles.includes("admin");
+    }, [currentUser]);
+    const canSeeConfig = useMemo(() => {
+        const byRole = Array.isArray(currentUser?.roles) && currentUser.roles.includes("admin");
+        const byPatent = currentUser?.patent && currentUser.patent !== "soldado";
+        return !!(byRole || byPatent);
+    }, [currentUser]);
+    const canAccessConfig = useMemo(() => {
+        try {
+            const raw = typeof window !== "undefined" ? localStorage.getItem("currentUser") : null;
+            if (!raw) return false;
+            const user = JSON.parse(raw);
+            if (Array.isArray(user?.roles) && user.roles.includes("admin")) return true;
+            const patent = user?.patent;
+            return patent && patent !== "soldado";
+        } catch {
+            return false;
+        }
+    }, []);
+
+    useEffect(() => {
+        const handleKey = (e: KeyboardEvent) => {
+            if (e.key === "Escape") setUserOpen(false);
+        };
+        const handleClickOutside = (e: MouseEvent) => {
+            if (!userOpen) return;
+            const el = userMenuRef.current;
+            if (el && !el.contains(e.target as Node)) {
+                setUserOpen(false);
+            }
+        };
+        document.addEventListener("keydown", handleKey);
+        document.addEventListener("mousedown", handleClickOutside);
+        return () => {
+            document.removeEventListener("keydown", handleKey);
+            document.removeEventListener("mousedown", handleClickOutside);
+        };
+    }, [userOpen]);
+
+    // Renderiza botão de login do Google no rodapé (em dev/produção)
+    useEffect(() => {
+        if (!open || currentUser) return; // renderiza quando a sidebar abrir e só se não logado
+        const ensureScriptAndRender = () => {
+            const renderGoogle = () => {
+                try {
+                    const clientId = (import.meta as any).env?.VITE_GOOGLE_CLIENT_ID;
+                    if (!clientId || !googleBtnRef.current) return;
+                    (window as any).google.accounts.id.initialize({
+                        client_id: clientId,
+                        callback: async (resp: any) => {
+                            try {
+                                const r = await fetch("/api/auth/google", {
+                                    method: "POST",
+                                    headers: { "Content-Type": "application/json" },
+                                    body: JSON.stringify({ credential: resp?.credential })
+                                });
+                                const j = await r.json();
+                                if (r.ok) {
+                                    // Puxa do banco o registro atualizado (roles/picture etc.)
+                                    let hydrated = j;
+                                    try {
+                                        if (j?.id) {
+                                            const g = await fetch(`/api/users/${j.id}`);
+                                            if (g.ok) {
+                                                const full = await g.json();
+                                                hydrated = { ...j, ...full };
+                                            }
+                                        }
+                                    } catch { }
+                                    localStorage.setItem("currentUser", JSON.stringify(hydrated));
+                                    setCurrentUser(hydrated);
+                                    setAvatarUrl(hydrated?.picture || null);
+                                    setUserOpen(false);
+                                    onClose?.();
+                                } else {
+                                    console.error("Falha no login:", j);
+                                }
+                            } catch (e) {
+                                console.error(e);
+                            }
+                        }
+                    });
+                    // limpa antes de renderizar para evitar duplicatas
+                    try { googleBtnRef.current.innerHTML = ""; } catch { }
+                    (window as any).google.accounts.id.renderButton(googleBtnRef.current, {
+                        theme: "outline",
+                        size: "large",
+                        type: "standard",
+                        shape: "rectangular",
+                        text: "signin_with"
+                    });
+                } catch { }
+            };
+            if (!(window as any).google) {
+                const s = document.createElement("script");
+                s.src = "https://accounts.google.com/gsi/client";
+                s.async = true;
+                s.defer = true;
+                s.onload = () => renderGoogle();
+                document.head.appendChild(s);
+            } else {
+                renderGoogle();
+            }
+        };
+        // aguarda o DOM montar o ref
+        const id = setTimeout(ensureScriptAndRender, 0);
+        return () => clearTimeout(id);
+    }, [open, currentUser]);
+
+    // Ouve alterações de login em outras abas
+    useEffect(() => {
+        const onStorage = (e: StorageEvent) => {
+            if (e.key === "currentUser") {
+                try {
+                    const parsed = e.newValue ? JSON.parse(e.newValue) : null;
+                    setCurrentUser(parsed);
+                    setAvatarUrl(parsed?.picture || null);
+                } catch { }
+            }
+        };
+        window.addEventListener("storage", onStorage);
+        return () => window.removeEventListener("storage", onStorage);
+    }, []);
+
+    // Sincroniza usuário com o servidor para refletir mudanças de roles/patent feitas no banco
+    useEffect(() => {
+        const sync = async () => {
+            try {
+                if (!currentUser?.id) return;
+                const r = await fetch(`/api/users/${currentUser.id}`);
+                if (!r.ok) return;
+                const fresh = await r.json();
+                const merged = { ...currentUser, ...fresh };
+                setCurrentUser(merged);
+                setAvatarUrl(merged?.picture || null);
+                try { localStorage.setItem("currentUser", JSON.stringify(merged)); } catch { }
+            } catch { }
+        };
+        // sincroniza quando abrir a sidebar e quando houver id
+        if (open && currentUser?.id) sync();
+    }, [open, currentUser?.id]);
+
+    const handleAccessClick = () => {
+        if (currentUser) return; // já logado, não abre prompt
+        try {
+            if ((window as any).google?.accounts?.id?.prompt) {
+                (window as any).google.accounts.id.prompt();
+                return;
+            }
+            const btn = googleBtnRef.current?.querySelector('[role="button"]') as HTMLElement | null;
+            if (btn) btn.click();
+        } catch { }
+    };
+
     return (
-        <nav className="hidden md:flex md:flex-col md:w-64 bg-slate-900 text-gray-300 shadow-lg fixed h-full">
-            <div className="flex flex-col items-center justify-center gap-2 border-b border-slate-700">
-                <div className="flex flex-row items-center justify-center">
+        <nav
+            className={`fixed z-[1500] top-0 left-0 h-full w-64 bg-slate-900 text-gray-300 shadow-lg transform transition-transform duration-300 ${open ? "translate-x-0" : "-translate-x-full"
+                }`}
+            aria-hidden={!open}
+        >
+            <div className="flex flex-col items-center justify-center gap-2 border-b border-slate-700 overflow-visible mt-3">
+                <div className="flex flex-row items-center justify-center relative mb-4" ref={userMenuRef}>
                     <a href="/"><img src="/path_gost.svg" alt="Logo GOST" className="w-10 h-10 object-cover rounded-md" /></a>
                     <span className="text-2xl font-bold text-white">GOST</span><br />
                 </div>
-                <span className="text-lg text-white italic text-center mb-4">Grupamento Operacional de Supressão Tatica</span>
+                {/* <span className="text-lg text-white italic text-center mb-4">Grupamento Operacional de Supressão Tatica</span> */}
             </div>
             <div className="flex-1 overflow-y-auto">
                 <ul id="desktop-nav">
@@ -36,6 +215,7 @@ export default function Sidebar({ active, onChange }: Props) {
                                 onClick={(e) => {
                                     e.preventDefault();
                                     onChange(item.key);
+                                    onClose?.();
                                 }}
                             >
                                 {item.label}
@@ -43,6 +223,40 @@ export default function Sidebar({ active, onChange }: Props) {
                         </li>
                     ))}
                 </ul>
+            </div>
+            {/* Rodapé com login */}
+            <div className="border-t border-slate-700 p-4">
+                <div className="flex items-center gap-3 mb-3 cursor-pointer" onClick={handleAccessClick}>
+                    {avatarUrl ? (
+                        <img
+                            src={avatarUrl}
+                            alt={currentUser?.name || "Usuário"}
+                            className="w-8 h-8 rounded-full object-cover"
+                            referrerPolicy="no-referrer"
+                            crossOrigin="anonymous"
+                            onError={() => setAvatarUrl(null)}
+                        />
+                    ) : (
+                        <div className="w-8 h-8 rounded-full bg-slate-800 flex items-center justify-center">
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-5 h-5 text-white">
+                                <path d="M12 12c2.761 0 5-2.239 5-5s-2.239-5-5-5-5 2.239-5 5 2.239 5 5 5zm0 2c-3.866 0-7 3.134-7 7h2a5 5 0 0 1 10 0h2c0-3.866-3.134-7-7-7z" />
+                            </svg>
+                        </div>
+                    )}
+                    <span className="text-sm text-white">{currentUser?.name ? currentUser.name : "Acessar"}</span>
+                </div>
+                {canSeeConfig && (
+                    <button
+                        className="w-full mb-3 px-3 py-2 text-sm rounded bg-emerald-600 text-white hover:bg-emerald-700 text-left"
+                        onClick={() => {
+                            onChange("configuracao");
+                            onClose?.();
+                        }}
+                    >
+                        Configuração
+                    </button>
+                )}
+                {!currentUser && <div ref={googleBtnRef} className="flex items-center justify-start"></div>}
             </div>
         </nav>
     );

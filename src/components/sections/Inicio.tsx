@@ -2,8 +2,8 @@ const emblemImage = "/path_gost.svg";
 
 export default function Inicio() {
     return (
-        <section id="inicio">
-            <h1 className="text-4xl font-bold text-slate-800 mb-6">ESTATUTO DE CONDUTA E OPERAÇÃO DA GOST</h1>
+        <section id="inicio" data-section-key="inicio">
+            <h1 className="text-4xl font-bold text-slate-800 mb-6">ESTATUTO DE CONDUTA E OPERAÇÃO DO GOST</h1>
             <div className="bg-white p-8 rounded-lg shadow-lg border border-gray-200">
                 <div className="mb-6 flex justify-center">
                     <img
