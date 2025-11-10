@@ -1,5 +1,5 @@
 import { MikroORM } from '@mikro-orm/core';
-import ormConfig from '../../src/config/orm';
+import ormConfig from '../../src/config/orm.js';
 
 let ormInstance: MikroORM | null = null;
 
