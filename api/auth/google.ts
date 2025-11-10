@@ -43,7 +43,7 @@ export default async function handler(req: any, res: any) {
 		if (!email) return res.status(400).json({ error: 'Email não presente no token' });
 
 		const em = await getEm();
-		const { Usuario } = await importAny(['../../dist/entities/usuarios.entity.js', '../../src/entities/usuarios.entity']);
+		const { Usuario } = await importAny(['../../server/entities/usuarios.entity.js', '../../src/entities/usuarios.entity']);
 		let user = await em.findOne(Usuario, { email });
 		if (user && (user as any).active === false) {
 			res.status(403).json({ error: 'Usuário inativo' });

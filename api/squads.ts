@@ -6,20 +6,20 @@ export default async function handler(req: any, res: any) {
 	try {
 		if (req.method === 'GET') {
 			const em = await getEm();
-			const { Squads } = await importAny(['../dist/entities/squads.entity.js', '../src/entities/squads.entity']);
+			const { Squads } = await importAny(['../server/entities/squads.entity.js', '../src/entities/squads.entity']);
 			const list = await em.find(Squads, {}, { limit: 50, orderBy: { createdAt: 'desc' } as any });
 			res.status(200).json(list);
 			return;
 		}
 		if (req.method === 'POST') {
-			const { Squads } = await importAny(['../dist/entities/squads.entity.js', '../src/entities/squads.entity']);
+			const { Squads } = await importAny(['../server/entities/squads.entity.js', '../src/entities/squads.entity']);
 			const { nome } = req.body || {};
 			if (!nome) {
 				res.status(400).json({ error: "Nome é obrigatório" });
 				return;
 			}
 			const em = await getEm();
-			const { Usuario } = await importAny(['../dist/entities/usuarios.entity.js', '../src/entities/usuarios.entity']);
+			const { Usuario } = await importAny(['../server/entities/usuarios.entity.js', '../src/entities/usuarios.entity']);
 			const existing = await em.findOne(Squads, { nome });
 			if (existing) {
 				res.status(409).json({ error: "Squad com este nome já existe" });

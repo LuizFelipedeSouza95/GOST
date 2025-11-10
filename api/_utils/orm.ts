@@ -10,7 +10,7 @@ export async function getOrm(): Promise<MikroORM> {
 		throw new Error('DATABASE_URL (ou GOST_DATABASE_URL) não definido no ambiente');
 	}
 	if (ormInstance) return ormInstance;
-	const cfgMod: any = await importAny(['../../dist/config/orm.js', '../../src/config/orm']);
+	const cfgMod: any = await importAny(['../../server/config/orm.js', '../../src/config/orm']);
 	const cfg = cfgMod?.default || cfgMod;
 	ormInstance = await MikroORM.init(cfg);
 	return ormInstance;

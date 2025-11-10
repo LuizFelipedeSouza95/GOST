@@ -10,7 +10,7 @@ export default async function handler(req: any, res: any) {
 	}
 	try {
 		const em = await getEm();
-		const { Comando } = await importAny(['../../dist/entities/comando.entity.js', '../../src/entities/comando.entity']);
+		const { Comando } = await importAny(['../../server/entities/comando.entity.js', '../../src/entities/comando.entity']);
 		const registro = await em.findOne(Comando, { id });
 		if (!registro) {
 			res.status(404).json({ error: "Não encontrado" });
