@@ -1,13 +1,11 @@
 {
-	"framework": "vite",
-	"buildCommand": "yarn build",
-	"outputDirectory": "dist",
-	"rewrites": [
-		{ "source": "/((?!api).*)", "destination": "/index.html" }
-	],
-	"functions": {
-		"api/**/*.{js,ts}": {
-			"runtime": "@vercel/node@2.15.10"
-		}
-	}
+    "framework": "vite",
+    "buildCommand": "yarn build",
+    "outputDirectory": "dist",
+    "rewrites": [
+        { "source": "/((?!api).*)", "destination": "/index.html" }
+    ],
+    "functions": {
+        "api/**/*.{js,ts}": {}
+    }
 }
