@@ -8,15 +8,15 @@
     },
     "scripts": {
         "dev": "vite",
-        "build": "tsc -b && vite build",
+        "build": "tsc -p tsconfig.server.json && vite build",
         "preview": "vite preview --strictPort --port 5173",
-		"migration:create": "tsx ./node_modules/@mikro-orm/cli/cli.js migration:create",
-		"migration:up": "tsx ./node_modules/@mikro-orm/cli/cli.js migration:up",
-		"migration:down": "tsx ./node_modules/@mikro-orm/cli/cli.js migration:down"
+        "migration:create": "tsx ./node_modules/@mikro-orm/cli/cli.js migration:create",
+        "migration:up": "tsx ./node_modules/@mikro-orm/cli/cli.js migration:up",
+        "migration:down": "tsx ./node_modules/@mikro-orm/cli/cli.js migration:down"
     },
-	"resolutions": {
-		"strip-ansi": "6.0.1"
-	},
+    "resolutions": {
+        "strip-ansi": "6.0.1"
+    },
     "dependencies": {
         "@mikro-orm/cli": "^6.5.9",
         "@mikro-orm/core": "^6.5.9",
@@ -25,6 +25,7 @@
         "@mikro-orm/reflection": "^6.5.9",
         "@types/uuid": "^11.0.0",
         "dotenv": "^17.2.3",
+        "pg": "^8.13.1",
         "google-auth-library": "^9.14.1",
         "react": "^18.3.1",
         "react-dom": "^18.3.1",
@@ -38,7 +39,7 @@
         "@vitejs/plugin-react": "4.3.2",
         "autoprefixer": "^10.4.20",
         "postcss": "^8.4.49",
-		"tsx": "^4.19.2",
+        "tsx": "^4.19.2",
         "tailwindcss": "^3.4.14",
         "ts-node": "^10.9.2",
         "typescript": "^5.6.3",

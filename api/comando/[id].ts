@@ -1,5 +1,6 @@
+// @ts-nocheck
 import { getEm } from '../_utils/orm.js';
-import { Comando } from '../../src/entities/comando.entity';
+import { Comando } from '../../dist/entities/comando.entity.js';
 
 export default async function handler(req: any, res: any) {
 	const { id } = req.query || {};

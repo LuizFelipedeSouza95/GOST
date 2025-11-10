@@ -99,8 +99,79 @@ function devApiPlugin() {
                                 res.end(String(body));
                             }
                         };
-                        const { default: authHandler } = await import("./api/auth/google");
-                        return authHandler(req as any, expressLikeRes);
+                        // Handler inline para evitar depender de arquivos de API (que em prod importam dist/)
+                        const bodyRaw = (req as any).body as string;
+                        let body: any = {};
+                        try { body = bodyRaw ? JSON.parse(bodyRaw) : {}; } catch { body = {}; }
+                        const credential = body?.credential;
+                        if (!credential) {
+                            expressLikeRes.status(400).json({ error: "credential ausente" });
+                            return;
+                        }
+                        const clientId = process.env.GOOGLE_CLIENT_ID || process.env.VITE_GOOGLE_CLIENT_ID;
+                        if (!clientId) {
+                            expressLikeRes.status(500).json({ error: "GOOGLE_CLIENT_ID não configurado" });
+                            return;
+                        }
+                        const { OAuth2Client } = await import("google-auth-library");
+                        const client = new OAuth2Client(clientId);
+                        const ticket = await client.verifyIdToken({ idToken: credential, audience: clientId });
+                        const payload = ticket.getPayload();
+                        if (!payload) {
+                            expressLikeRes.status(401).json({ error: "Token inválido" });
+                            return;
+                        }
+                        const googleId = payload.sub as string;
+                        const email = payload.email as string | undefined;
+                        const name = payload.name as string | undefined;
+                        const picture = payload.picture as string | undefined;
+                        if (!email) {
+                            expressLikeRes.status(400).json({ error: "Email não presente no token" });
+                            return;
+                        }
+                        const em2 = await getEm();
+                        const { Usuario } = await import("./src/entities/usuarios.entity");
+                        let user = await em2.findOne(Usuario, { email });
+                        if (user && (user as any).active === false) {
+                            expressLikeRes.status(403).json({ error: "Usuário inativo" });
+                            return;
+                        }
+                        if (!user) {
+                            user = em2.create(Usuario, {
+                                email,
+                                name: name || null,
+                                picture: picture || null,
+                                googleId,
+                                roles: ["user"],
+                                is_comandante_squad: false,
+                                nome_squad_subordinado: null,
+                                nome_guerra: null,
+                                id_squad_subordinado: null,
+                                active: true,
+                                createdAt: new Date(),
+                                updatedAt: new Date(),
+                                comando_geral: [],
+                                classe: "",
+                                data_admissao_gost: "",
+                                patent: "recruta",
+                                comando_squad: null
+                            });
+                            await em2.persistAndFlush(user);
+                        } else {
+                            (user as any).googleId = googleId;
+                            (user as any).picture = picture || (user as any).picture || null;
+                            (user as any).name = name || (user as any).name || null;
+                            (user as any).updatedAt = new Date();
+                            await em2.flush();
+                        }
+                        return expressLikeRes.status(200).json({
+                            id: (user as any).id,
+                            email: (user as any).email,
+                            name: (user as any).name,
+                            picture: (user as any).picture,
+                            roles: (user as any).roles,
+                            patent: (user as any).patent,
+                        });
                     }
                     const parts = u.pathname.split("/").filter(Boolean); // ["api","resource",":id"?]
                     const resource = parts[1];

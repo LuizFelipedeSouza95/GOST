@@ -10,7 +10,7 @@ export class Usuario extends BaseEntity implements InterfaceUser {
 
     @Property({ type: 'text', unique: true })
     email!: string;
-
+    
     @Property({ type: 'text', nullable: true })
     name?: string | null;
 

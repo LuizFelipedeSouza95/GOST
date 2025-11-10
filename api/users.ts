@@ -1,5 +1,6 @@
+// @ts-nocheck
 import { getEm } from './_utils/orm.js';
-import { Usuario } from '../src/entities/usuarios.entity';
+import { Usuario } from '../dist/entities/usuarios.entity.js';
 
 export default async function handler(req: any, res: any) {
 	try {
