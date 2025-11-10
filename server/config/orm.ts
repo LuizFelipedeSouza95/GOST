@@ -2,9 +2,9 @@ import 'reflect-metadata';
 import 'dotenv/config';
 import { Options, ReflectMetadataProvider } from '@mikro-orm/core';
 import { PostgreSqlDriver } from '@mikro-orm/postgresql';
-import { Usuario } from '../entities/usuarios.entity';
-import { Comando } from '../entities/comando.entity';
-import { Squads } from '../entities/squads.entity';
+import { Usuario } from '../entities/usuarios.entity.js';
+import { Comando } from '../entities/comando.entity.js';
+import { Squads } from '../entities/squads.entity.js';
 
 const config: Options = {
   migrations: {

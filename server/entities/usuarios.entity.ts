@@ -1,6 +1,6 @@
 // src/entities/Usuario.ts
 import { Entity, Property } from '@mikro-orm/core';
-import { BaseEntity } from './base.entity';
+import { BaseEntity } from './base.entity.js';
 import type { InterfaceUser } from '../../src/types';
 
 @Entity({ tableName: 'users', schema: process.env.DB_SCHEMA || 'public' })
@@ -10,7 +10,7 @@ export class Usuario extends BaseEntity implements InterfaceUser {
 
     @Property({ type: 'text', unique: true })
     email!: string;
-    
+
     @Property({ type: 'text', nullable: true })
     name?: string | null;
 

@@ -1,7 +1,7 @@
 // @ts-nocheck
 import { getEm } from './_utils/orm.js';
-import { Squads } from '../server/entities/squads.entity';
-import { Usuario } from '../server/entities/usuarios.entity';
+import { Squads } from '../server/entities/squads.entity.js';
+import { Usuario } from '../server/entities/usuarios.entity.js';
 
 export default async function handler(req: any, res: any) {
 	try {

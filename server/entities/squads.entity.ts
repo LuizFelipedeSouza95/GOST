@@ -1,6 +1,6 @@
 // src/entities/Usuario.ts
 import { Entity, Property } from '@mikro-orm/core';
-import { BaseEntity } from './base.entity';
+import { BaseEntity } from './base.entity.js';
 
 @Entity({ tableName: 'squads', schema: process.env.DB_SCHEMA || 'public' })
 export class Squads extends BaseEntity {
