@@ -1,2 +1,2 @@
 // mikro-orm.config.ts
-export { default } from './config/orm';
+export { default } from './config/orm.js';
