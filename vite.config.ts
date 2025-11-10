@@ -6,6 +6,9 @@ const EMBED_API = process.env.VITE_EMBED_DEV_API === "1";
 
 export default defineConfig({
     plugins: [react(), EMBED_API ? devApiPlugin() : null].filter(Boolean) as any,
+    build: {
+        emptyOutDir: false
+    },
     server: {
         port: 5173,
         strictPort: false,

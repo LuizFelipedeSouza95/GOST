@@ -1,12 +1,11 @@
 // @ts-nocheck
 import { getEm } from './_utils/orm.js';
-import { importAny } from './_utils/resolve.js';
+import { Usuario } from '../dist/entities/usuarios.entity.js';
 
 export default async function handler(req: any, res: any) {
 	try {
 		if (req.method === 'GET') {
 			const em = await getEm();
-			const { Usuario } = await importAny(['../server/entities/usuarios.entity.js', '../src/entities/usuarios.entity']);
 			const users = await em.find(Usuario, {}, { limit: 200, orderBy: { createdAt: 'desc' } as any });
 			res.status(200).json(users.map(u => ({
 				id: u.id,
@@ -31,7 +30,6 @@ export default async function handler(req: any, res: any) {
 			return;
 		}
 		if (req.method === 'POST') {
-			const { Usuario } = await importAny(['../server/entities/usuarios.entity.js', '../src/entities/usuarios.entity']);
 			const contentType = (req.headers?.['content-type'] || '') as string;
 			let body: any = req.body;
 			if (typeof body === 'string') {

@@ -7,7 +7,7 @@
     ],
     "functions": {
         "api/**/*.{js,ts}": {
-            "includeFiles": "server/**"
+            "includeFiles": "dist/**"
         }
     }
 }

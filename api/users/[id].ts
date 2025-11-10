@@ -1,6 +1,6 @@
 // @ts-nocheck
 import { getEm } from '../_utils/orm.js';
-import { importAny } from '../_utils/resolve.js';
+import { Usuario } from '../../dist/entities/usuarios.entity.js';
 
 export default async function handler(req: any, res: any) {
 	const { id } = req.query || {};
@@ -10,7 +10,6 @@ export default async function handler(req: any, res: any) {
 	}
 	try {
 		const em = await getEm();
-		const { Usuario } = await importAny(['../../server/entities/usuarios.entity.js', '../../src/entities/usuarios.entity']);
 		const user = await em.findOne(Usuario, { id });
 		if (!user) {
 			res.status(404).json({ error: 'Não encontrado' });
@@ -21,7 +20,6 @@ export default async function handler(req: any, res: any) {
 			return;
 		}
 		if (req.method === 'PUT') {
-			const { Usuario } = await importAny(['../../server/entities/usuarios.entity.js', '../../src/entities/usuarios.entity']);
 			const allowed = ['googleId', 'email', 'name', 'picture', 'roles', 'lastLogin', 'password', 'comando_geral', 'comando_squad', 'classe', 'data_admissao_gost', 'patent', 'active', 'is_comandante_squad', 'nome_squad_subordinado', 'id_squad_subordinado', 'nome_guerra'];
 			const body = req.body || {};
 			for (const key of allowed) {

@@ -1,7 +1,7 @@
 // @ts-nocheck
 import { OAuth2Client } from 'google-auth-library';
 import { getEm } from '../_utils/orm.js';
-import { importAny } from '../_utils/resolve.js';
+import { Usuario } from '../../dist/entities/usuarios.entity.js';
 
 export default async function handler(req: any, res: any) {
 	// CORS headers (dev/prod)
@@ -43,7 +43,6 @@ export default async function handler(req: any, res: any) {
 		if (!email) return res.status(400).json({ error: 'Email não presente no token' });
 
 		const em = await getEm();
-		const { Usuario } = await importAny(['../../server/entities/usuarios.entity.js', '../../src/entities/usuarios.entity']);
 		let user = await em.findOne(Usuario, { email });
 		if (user && (user as any).active === false) {
 			res.status(403).json({ error: 'Usuário inativo' });
