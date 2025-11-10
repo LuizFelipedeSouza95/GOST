@@ -1,22 +1,15 @@
+// tsconfig.server.json
 {
   "compilerOptions": {
-    "target": "ES2020",
-    // Configurações cruciais para o Node.js/Backend:
-    "module": "CommonJS", 
-    "moduleResolution": "node", // Usar 'node' é mais seguro para backend do que 'bundler'
-    "outDir": "./dist/server",
-    "rootDir": ".",
+    // ...
+    // Mude a saída para um local mais acessível ou remova o outDir se for possível
+    "outDir": "./.vercel/output/server", 
+    // ...
     "baseUrl": ".",
     "paths": {
-      "server/*": ["./server/*"] // Alias CRUCIAL para resolver entidades
-    },
-    // Configurações do seu ORM (MikroORM usa decorators):
-    "experimentalDecorators": true,
-    "emitDecoratorMetadata": true,
-    "esModuleInterop": true,
-    "strict": true
+      "server/*": ["./server/*"]
+    }
   },
-  // Inclua as funções API e as entidades do servidor
-  "include": ["api/**/*", "server/**/*"], 
-  "exclude": ["node_modules", "dist", "src"] // EXCLUA 'src' (Frontend)
+  "include": ["api/**/*", "server/**/*"],
+  "exclude": ["node_modules", "dist"]
 }
