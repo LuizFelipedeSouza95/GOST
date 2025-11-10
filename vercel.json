@@ -10,7 +10,7 @@
     ],
     "functions": {
         "api/**/*.{js,ts}": {
-            "includeFiles": "src/entities/**/*"
+            "includeFiles": "server/**/*"
         }
     }
 }
