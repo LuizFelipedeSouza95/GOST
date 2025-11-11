@@ -15,7 +15,7 @@ export default async function handler(req: any, res: any) {
 			if (typeof body === "string") {
 				try { body = JSON.parse(body); } catch { body = {}; }
 			}
-			const { email, nome_equipe, data_fundacao, telefone, whatsapp, endereco, cidade, estado, pais, cep, facebook, instagram, nome_significado_sigla, imagem_url, fundador, co_fundadores } = body || {};
+			const { email, nome_equipe, data_fundacao, telefone, whatsapp, endereco, cidade, estado, pais, cep, facebook, instagram, nome_significado_sigla, imagem_url, fundador, co_fundadores, descricao_patch } = body || {};
 			// Validação mínima (alinhado ao dev server): exigir pelo menos email ou nome_equipe
 			if (!email && !nome_equipe) {
 				res.status(400).json({ error: 'Informe ao menos email ou nome_equipe' });
@@ -47,6 +47,7 @@ export default async function handler(req: any, res: any) {
 				imagem_url,
 				fundador,
 				co_fundadores,
+				descricao_patch,
 				createdAt: new Date(),
 				updatedAt: new Date(),
 			});

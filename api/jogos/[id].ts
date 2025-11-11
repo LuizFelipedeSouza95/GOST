@@ -20,13 +20,24 @@ export default async function handler(req: any, res: any) {
             return;
         }
 		if (req.method === 'PUT') {
-			const allowed = ["nome_jogo", "data_jogo", "local_jogo", "descricao_jogo", "hora_inicio", "hora_fim", "localizacao", "confirmations", "status"];
-            const body = req.body || {};
-            for (const k of allowed) if (k in (body || {})) (registro as any)[k] = body[k];
-            await em.flush();
-            res.status(200).json(registro);
-            return;
-        }
+			const allowed = ["nome_jogo", "data_jogo", "local_jogo", "descricao_jogo", "hora_inicio", "hora_fim", "localizacao", "confirmations", "status", "capa_url"];
+			let body = req.body || {};
+			if (typeof body === 'string') {
+				try { body = JSON.parse(body); } catch { body = {}; }
+			}
+			// suporte a upload base64 de capa
+			if (body?.capa_imagem_base64) {
+				const mime = typeof body?.mime === 'string' && body.mime ? body.mime : 'image/png';
+				const prefix = `data:${mime};base64,`;
+				(registro as any).capa_url = String(body.capa_imagem_base64).startsWith('data:')
+					? body.capa_imagem_base64
+					: (prefix + body.capa_imagem_base64);
+			}
+			for (const k of allowed) if (k in (body || {})) (registro as any)[k] = body[k];
+			await em.flush();
+			res.status(200).json(registro);
+			return;
+		}
         if (req.method === 'DELETE') {
             await em.removeAndFlush(registro);
             res.status(204).end();

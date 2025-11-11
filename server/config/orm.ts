@@ -6,6 +6,7 @@ import { Usuario } from '../entities/usuarios.entity.js';
 import { Equipe } from '../entities/equipe.entity.js';
 import { Squads } from '../entities/squads.entity.js';
 import { Jogo } from '../entities/jogos.entity.js';
+import { Galeria } from '../entities/galeria.entity.js';
 
 const config: Options = {
   migrations: {
@@ -17,7 +18,7 @@ const config: Options = {
   driver: PostgreSqlDriver,
   clientUrl: process.env.DATABASE_URL || process.env.GOST_DATABASE_URL,
   schema: process.env.DB_SCHEMA || 'public',
-  entities: [Usuario, Equipe, Squads, Jogo],
+  entities: [Usuario, Equipe, Squads, Jogo, Galeria],
   metadataProvider: ReflectMetadataProvider,
   debug: process.env.NODE_ENV !== 'production',
   driverOptions: (() => {

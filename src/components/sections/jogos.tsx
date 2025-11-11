@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 
 type Confirmation = {
     id_user: string;
@@ -180,6 +180,8 @@ export default function JogosSection() {
     const [jogos, setJogos] = useState<Jogo[]>([]);
     const [loading, setLoading] = useState<boolean>(false);
     const [error, setError] = useState<string | null>(null);
+    const sectionRef = useRef<HTMLElement | null>(null);
+    const [ready, setReady] = useState(false);
 
     // UI state para criar/editar
     const [editingId, setEditingId] = useState<string | null>(null);
@@ -218,9 +220,27 @@ export default function JogosSection() {
         }
     }
 
+    // Lazy load: só busca quando a seção entrar na viewport
     useEffect(() => {
-        fetchJogos();
+        const el = sectionRef.current;
+        if (!el) return;
+        const io = new IntersectionObserver(
+            (entries) => {
+                for (const e of entries) {
+                    if (e.isIntersecting) setReady(true);
+                }
+            },
+            { root: null, rootMargin: "200px", threshold: 0.01 }
+        );
+        io.observe(el);
+        return () => io.disconnect();
     }, []);
+
+    useEffect(() => {
+        if (!ready) return;
+        fetchJogos();
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [ready]);
 
     const jogosDoDia = useMemo(() => {
         return jogos.filter((j) => j.data_jogo === selectedDate);
@@ -406,7 +426,7 @@ export default function JogosSection() {
     }
 
     return (
-        <section className="max-w-7xl mx-auto">
+        <section className="max-w-7xl mx-auto" ref={sectionRef as any}>
             <h2 className="text-2xl font-semibold text-slate-900 mb-4">Calendário de Jogos</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 {/* Calendário e ações */}

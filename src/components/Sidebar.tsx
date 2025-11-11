@@ -16,6 +16,7 @@ const items: { key: SectionKey; label: string }[] = [
     { key: "uniformes", label: "Uniformes (Kit GOST)" },
     { key: "briefing", label: "Briefing de Missão" },
     { key: "logistica", label: "Logística e Horários" },
+    { key: "galeria", label: "Galeria" },
     { key: "jogos", label: "Jogos" },
     { key: "membros", label: "Membros" }
 ];
@@ -194,12 +195,12 @@ export default function Sidebar({ active, onChange, open = false, onClose }: Pro
                 md:top-0 md:left-0 md:right-auto md:h-screen md:w-64 md:rounded-none md:overflow-visible md:translate-y-0`}
             aria-hidden={false}
         >
-            <div className="flex flex-col items-center justify-center gap-2 border-b border-slate-700 overflow-visible mt-3">
+            <div className="flex flex-col items-center justify-center gap-1 border-b border-slate-700 overflow-visible mt-2">
                 <div className="flex flex-row items-center justify-center relative">
-                    <a href="/"><img src="/path_gost.svg" alt="Logo GOST" className="w-10 h-10 object-cover rounded-md" /></a>
+                    <a href="/"><img src="/path_gost.svg" alt="Logo GOST" className="w-9 h-9 object-cover rounded-md" /></a>
                     <span className="text-2xl font-bold text-white">GOST</span><br />
                 </div>
-                <span className="text-lg text-white italic text-center mb-3">Grupamento Operacional de Supressão Tatica</span>
+                <span className="text-base text-white italic text-center mb-1">Grupamento Operacional de Supressão Tatica</span>
             </div>
             <div className="flex-1">
                 <ul id="desktop-nav">
@@ -207,7 +208,7 @@ export default function Sidebar({ active, onChange, open = false, onClose }: Pro
                         <li key={item.key}>
                             <a
                                 href={item.key === "inicio" ? "/" : `/${item.key}`}
-                                className={`nav-link block p-3 text-lg ${active === item.key ? "active" : ""
+                                className={`nav-link block px-3 py-2 text-base ${active === item.key ? "active" : ""
                                     }`}
                                 onClick={(e) => {
                                     e.preventDefault();
@@ -222,9 +223,9 @@ export default function Sidebar({ active, onChange, open = false, onClose }: Pro
                 </ul>
             </div>
             {/* Rodapé com login */}
-            <div className="border-t border-slate-700 p-4">
+            <div className="border-t border-slate-700 p-3">
                 {currentUser ? (
-                    <div className="mb-3" ref={userMenuRef}>
+                    <div className="mb-2" ref={userMenuRef}>
                         <button
                             type="button"
                             className="flex items-center gap-3 w-full text-left cursor-pointer"
@@ -279,13 +280,13 @@ export default function Sidebar({ active, onChange, open = false, onClose }: Pro
                         )}
                     </div>
                 ) : (
-                    <div className="mb-3">
+                    <div className="mb-2">
                         <div ref={googleBtnRef} className="inline-flex"></div>
                     </div>
                 )}
                 {canAccessConfig && (
                     <button
-                        className="w-full mb-3 px-3 py-2 text-sm rounded bg-emerald-600 text-white hover:bg-emerald-700 text-left"
+                        className="w-full mb-2 px-3 py-2 text-sm rounded bg-emerald-600 text-white hover:bg-emerald-700 text-left"
                         onClick={() => {
                             onChange("configuracao");
                             onClose?.();

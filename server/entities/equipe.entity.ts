@@ -51,4 +51,8 @@ export class Equipe extends BaseEntity {
 
     @Property({ type: 'text', nullable: true })
     co_fundadores: string = '';
+
+    // Descrição rica do patch/equipe (markdown simples ou texto)
+    @Property({ type: 'text', nullable: true })
+    descricao_patch: string = '';
 }

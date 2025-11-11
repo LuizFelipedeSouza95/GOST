@@ -34,4 +34,7 @@ export class Jogo extends BaseEntity {
 
 	@Property({ type: 'text', nullable: true, default: 'scheduled' })
 	status: 'scheduled' | 'canceled' | 'completed' = 'scheduled';
+
+	@Property({ type: 'text', nullable: true })
+	capa_url: string | null = null;
 }

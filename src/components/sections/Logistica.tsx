@@ -1,8 +1,8 @@
 export default function Logistica() {
     return (
-        <section id="logistica">
-            <h1 className="text-4xl font-bold text-slate-800 mb-6">TÓPICO VI. LOGÍSTICA OPERACIONAL E COMPROMISSO</h1>
-            <p className="text-lg text-gray-700 mb-6">
+		<section id="logistica">
+			<h1 className="text-4xl font-bold text-slate-800 mb-3">TÓPICO VI. LOGÍSTICA OPERACIONAL E COMPROMISSO</h1>
+			<p className="text-lg text-gray-700 mb-3">
                 A participação nas atividades agendadas é obrigatória para a manutenção da proficiência e coesão tática.
             </p>
             <div className="grid md:grid-cols-2 gap-6">

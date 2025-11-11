@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 function UserIcon({ size = 36 }: { size?: number }) {
     return (
@@ -79,28 +79,73 @@ type DbUser = {
 
 export default function Membros() {
     const [usuarios, setUsuarios] = useState<DbUser[]>([]);
-    const [loading, setLoading] = useState(true);
+    const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
+    const [offset, setOffset] = useState(0);
+    const [hasMore, setHasMore] = useState(true);
+    const sectionRef = useRef<HTMLElement | null>(null);
+    const [ready, setReady] = useState(false);
+    const bottomRef = useRef<HTMLDivElement | null>(null);
 
+    // Lazy load: só quando a seção entrar na viewport
     useEffect(() => {
-        const load = async () => {
-            setLoading(true);
-            setError(null);
-            try {
-                const r = await fetch("/api/users");
-                const j = await r.json();
-                if (!r.ok) throw new Error(j?.error || "Falha ao carregar usuários");
-                setUsuarios(Array.isArray(j) ? j : []);
-            } catch (e: any) {
-                setError(e?.message || "Erro ao carregar");
-            } finally {
-                setLoading(false);
-            }
-        };
-        load();
+        const el = sectionRef.current;
+        if (!el) return;
+        const io = new IntersectionObserver(
+            (entries) => {
+                for (const e of entries) if (e.isIntersecting) setReady(true);
+            },
+            { root: null, rootMargin: "200px", threshold: 0.01 }
+        );
+        io.observe(el);
+        return () => io.disconnect();
     }, []);
+
+    async function loadMore() {
+        if (loading || !hasMore) return;
+        setLoading(true);
+        setError(null);
+        try {
+            const limit = 20;
+            const r = await fetch(`/api/users?offset=${offset}&limit=${limit}`);
+            const j = await r.json().catch(() => []);
+            if (!r.ok) throw new Error(j?.error || "Falha ao carregar usuários");
+            const arr: DbUser[] = Array.isArray(j) ? j : [];
+            setUsuarios((prev) => [...prev, ...arr]);
+            setOffset((prev) => prev + arr.length);
+            if (arr.length < limit) setHasMore(false);
+        } catch (e: any) {
+            setError(e?.message || "Erro ao carregar");
+            setHasMore(false);
+        } finally {
+            setLoading(false);
+        }
+    }
+
+    // Inicial quando a seção estiver pronta
+    useEffect(() => {
+        if (!ready || usuarios.length > 0) return;
+        (async () => {
+            await loadMore();
+        })();
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [ready]);
+
+    // Infinite scroll
+    useEffect(() => {
+        if (!bottomRef.current) return;
+        const io = new IntersectionObserver(
+            (entries) => {
+                for (const e of entries) if (e.isIntersecting) loadMore();
+            },
+            { root: null, rootMargin: "200px", threshold: 0 }
+        );
+        io.observe(bottomRef.current);
+        return () => io.disconnect();
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [bottomRef.current, hasMore]);
     return (
-        <section id="membros" className="overflow-x-hidden">
+        <section id="membros" className="overflow-x-hidden" ref={sectionRef as any}>
             <h1 className="text-4xl font-bold text-slate-800 mb-6">Membros e Cadeia de Comando</h1>
 
             <div className="bg-white rounded-lg shadow-lg p-6 border border-gray-200">
@@ -132,6 +177,7 @@ export default function Membros() {
                         <div className="md:hidden overflow-x-hidden">
                             <HierarquiaMobile data={usuarios} />
                         </div>
+                        {hasMore && <div ref={bottomRef} className="h-8" />}
                     </>
                 )}
             </div>

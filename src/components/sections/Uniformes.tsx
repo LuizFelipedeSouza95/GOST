@@ -1,8 +1,8 @@
 export default function Uniformes() {
     return (
-        <section id="uniformes">
-            <h1 className="text-4xl font-bold text-slate-800 mb-6">TÓPICO IV. PADRÕES DE UNIFORMIZAÇÃO (KIT GOST)</h1>
-            <p className="text-lg text-gray-700 mb-6">
+		<section id="uniformes">
+			<h1 className="text-4xl font-bold text-slate-800 mb-3">TÓPICO IV. PADRÕES DE UNIFORMIZAÇÃO (KIT GOST)</h1>
+			<p className="text-lg text-gray-700 mb-3">
                 A uniformidade tática garante a identificação de Força Amiga (BLUFOR) e reforça a identidade GOST. Apenas padrões táticos e coesos são permitidos.
             </p>
             <div className="grid md:grid-cols-2 gap-6">

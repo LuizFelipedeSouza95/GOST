@@ -46,7 +46,7 @@ export default async function handler(req: any, res: any) {
 			}
 		}
 		if (req.method === "PUT") {
-			const allowed = ["email", "nome_equipe", "data_fundacao", "email", "telefone", "whatsapp", "endereco", "cidade", "estado", "pais", "cep", "facebook", "instagram", "nome_significado_sigla", "imagem_url", "fundador", "co_fundadores"];
+			const allowed = ["email", "nome_equipe", "data_fundacao", "telefone", "whatsapp", "endereco", "cidade", "estado", "pais", "cep", "facebook", "instagram", "nome_significado_sigla", "imagem_url", "fundador", "co_fundadores", "descricao_patch"];
 			const body = req.body || {};
 			for (const k of allowed) if (k in (body || {})) (registro as any)[k] = body[k];
 			await em.flush();

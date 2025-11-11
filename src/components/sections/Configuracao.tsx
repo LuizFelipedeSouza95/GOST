@@ -1,4 +1,5 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import { fetchEquipeOnce, readEquipeFromLocal } from "../../lib/equipeClient";
 
 type ApiResult = { ok: boolean; message: string };
 
@@ -90,6 +91,8 @@ export default function Configuracao() {
 	const squadApi = useSubmit("/api/squads");
 	const [squads, setSquads] = useState<any[]>([]);
 	const [loadingSquads, setLoadingSquads] = useState(false);
+	const [squadsOffset, setSquadsOffset] = useState(0);
+	const [squadsHasMore, setSquadsHasMore] = useState(true);
 	// Modal de squads
 	const [squadModalOpen, setSquadModalOpen] = useState(false);
 	const [squadIsCreate, setSquadIsCreate] = useState(false);
@@ -116,7 +119,8 @@ export default function Configuracao() {
 		nome_significado_sigla: "",
 		imagem_url: "",
 		fundador: "",
-		co_fundadores: ""
+		co_fundadores: "",
+		descricao_patch: ""
 	});
 	const [teamModalOpen, setTeamModalOpen] = useState(false);
 	const [isAdmin, setIsAdmin] = useState(false);
@@ -134,6 +138,14 @@ export default function Configuracao() {
 	// Users (listar e alterar patente)
 	const [users, setUsers] = useState<any[]>([]);
 	const [loadingUsers, setLoadingUsers] = useState(false);
+	const [usersOffset, setUsersOffset] = useState(0);
+	const [usersHasMore, setUsersHasMore] = useState(true);
+
+	// lazy load da seção
+	const sectionRef = useRef<HTMLElement | null>(null);
+	const [ready, setReady] = useState(false);
+	const usersBottomRef = useRef<HTMLDivElement | null>(null);
+	const squadsBottomRef = useRef<HTMLDivElement | null>(null);
 	const [rowMsgByUser, setRowMsgByUser] = useState<Record<string, string>>({});
 
 	// Modal de edição
@@ -204,31 +216,37 @@ export default function Configuracao() {
 		return `(${ddd}) ${p1}${p2 ? "-" + p2 : ""}`;
 	};
 
-	const loadUsers = async () => {
+	const loadMoreUsers = async () => {
+		if (loadingUsers || !usersHasMore) return;
 		setLoadingUsers(true);
 		try {
-			const res = await fetch("/api/users");
-			const data = await res.json();
-			if (Array.isArray(data)) {
-				setUsers(data);
-			}
+			const limit = 20;
+			const res = await fetch(`/api/users?offset=${usersOffset}&limit=${limit}`);
+			const data = await res.json().catch(() => []);
+			const arr = Array.isArray(data) ? data : [];
+			setUsers((prev) => [...prev, ...arr]);
+			setUsersOffset((prev) => prev + arr.length);
+			if (arr.length < limit) setUsersHasMore(false);
 		} catch {
-			// ignore
+			setUsersHasMore(false);
 		} finally {
 			setLoadingUsers(false);
 		}
 	};
 
-	const loadSquads = async () => {
+	const loadMoreSquads = async () => {
+		if (loadingSquads || !squadsHasMore) return;
 		setLoadingSquads(true);
 		try {
-			const res = await fetch("/api/squads");
-			const data = await res.json();
-			if (Array.isArray(data)) {
-				setSquads(data);
-			}
+			const limit = 20;
+			const res = await fetch(`/api/squads?offset=${squadsOffset}&limit=${limit}`);
+			const data = await res.json().catch(() => []);
+			const arr = Array.isArray(data) ? data : [];
+			setSquads((prev) => [...prev, ...arr]);
+			setSquadsOffset((prev) => prev + arr.length);
+			if (arr.length < limit) setSquadsHasMore(false);
 		} catch {
-			// ignore
+			setSquadsHasMore(false);
 		} finally {
 			setLoadingSquads(false);
 		}
@@ -237,39 +255,34 @@ export default function Configuracao() {
 	const loadTeam = async () => {
 		setTeamLoading(true);
 		try {
-			// Fallback imediato: cache local (útil para mobile com rede lenta/cache agressivo)
+			// Fallback imediato: cache local/sessão
 			try {
-				const cached = localStorage.getItem("equipe_cache");
-				if (cached) {
-					const first = JSON.parse(cached);
-					if (first && typeof first === "object") {
-						setTeamId(first.id || null);
-						setTeamForm({
-							nome_equipe: first.nome_equipe || "",
-							data_fundacao: maskDateBR(first.data_fundacao || ""),
-							email: first.email || "",
-							telefone: maskPhoneBR(first.telefone || ""),
-							whatsapp: maskPhoneBR(first.whatsapp || ""),
-							endereco: first.endereco || "",
-							cidade: first.cidade || "",
-							estado: first.estado || "",
-							pais: first.pais || "",
-							cep: first.cep || "",
-							facebook: first.facebook || "",
-							instagram: first.instagram || "",
-							nome_significado_sigla: first.nome_significado_sigla || "",
-							imagem_url: first.imagem_url || "",
-							fundador: first.fundador || "",
-							co_fundadores: first.co_fundadores || ""
-						});
-					}
+				const first = readEquipeFromLocal();
+				if (first && typeof first === "object") {
+					setTeamId(first.id || null);
+					setTeamForm({
+						nome_equipe: first.nome_equipe || "",
+						data_fundacao: maskDateBR(first.data_fundacao || ""),
+						email: first.email || "",
+						telefone: maskPhoneBR(first.telefone || ""),
+						whatsapp: maskPhoneBR(first.whatsapp || ""),
+						endereco: first.endereco || "",
+						cidade: first.cidade || "",
+						estado: first.estado || "",
+						pais: first.pais || "",
+						cep: first.cep || "",
+						facebook: first.facebook || "",
+						instagram: first.instagram || "",
+						nome_significado_sigla: first.nome_significado_sigla || "",
+						imagem_url: first.imagem_url || "",
+						fundador: first.fundador || "",
+						co_fundadores: first.co_fundadores || "",
+						descricao_patch: first.descricao_patch || ""
+					});
 				}
-			} catch {}
+			} catch { }
 
-			const origin = window.location.origin || "";
-			const res = await fetch(`${origin}/api/equipe`, { cache: "no-store" });
-			const data = await res.json();
-			const first = Array.isArray(data) ? (data[0] || null) : null;
+			const first = await fetchEquipeOnce();
 			if (first) {
 				setTeamId(first.id || null);
 				setTeamForm({
@@ -288,9 +301,10 @@ export default function Configuracao() {
 					nome_significado_sigla: first.nome_significado_sigla || "",
 					imagem_url: first.imagem_url || "",
 					fundador: first.fundador || "",
-					co_fundadores: first.co_fundadores || ""
+					co_fundadores: first.co_fundadores || "",
+					descricao_patch: first.descricao_patch || ""
 				});
-				try { localStorage.setItem("equipe_cache", JSON.stringify(first)); } catch {}
+				try { localStorage.setItem("equipe_cache", JSON.stringify(first)); } catch { }
 			}
 		} catch {
 		} finally {
@@ -390,11 +404,56 @@ export default function Configuracao() {
 		}
 	};
 
+	// Lazy load ao entrar na viewport
 	useEffect(() => {
-		loadUsers();
-		loadSquads();
-		loadTeam();
+		const el = sectionRef.current;
+		if (!el) return;
+		const io = new IntersectionObserver(
+			(entries) => {
+				for (const e of entries) if (e.isIntersecting) setReady(true);
+			},
+			{ root: null, rootMargin: "200px", threshold: 0.01 }
+		);
+		io.observe(el);
+		return () => io.disconnect();
 	}, []);
+
+	useEffect(() => {
+		if (!ready) return;
+		// carregar primeira página ao entrar
+		if (users.length === 0) loadMoreUsers();
+		if (squads.length === 0) loadMoreSquads();
+		loadTeam();
+		// eslint-disable-next-line react-hooks/exhaustive-deps
+	}, [ready]);
+
+	// infinite scroll - users
+	useEffect(() => {
+		if (!usersBottomRef.current) return;
+		const io = new IntersectionObserver(
+			(entries) => {
+				for (const e of entries) if (e.isIntersecting) loadMoreUsers();
+			},
+			{ root: null, rootMargin: "200px", threshold: 0 }
+		);
+		io.observe(usersBottomRef.current);
+		return () => io.disconnect();
+		// eslint-disable-next-line react-hooks/exhaustive-deps
+	}, [usersBottomRef.current, usersHasMore]);
+
+	// infinite scroll - squads
+	useEffect(() => {
+		if (!squadsBottomRef.current) return;
+		const io = new IntersectionObserver(
+			(entries) => {
+				for (const e of entries) if (e.isIntersecting) loadMoreSquads();
+			},
+			{ root: null, rootMargin: "200px", threshold: 0 }
+		);
+		io.observe(squadsBottomRef.current);
+		return () => io.disconnect();
+		// eslint-disable-next-line react-hooks/exhaustive-deps
+	}, [squadsBottomRef.current, squadsHasMore]);
 
 	const openEdit = async (userId: string) => {
 		setEditOpen(true);
@@ -404,7 +463,7 @@ export default function Configuracao() {
 		setEditForm(null);
 		try {
 			// garante squads atualizadas
-			if (!squads.length) await loadSquads();
+			if (!squads.length) await loadMoreSquads();
 			const r = await fetch(`/api/users/${userId}`);
 			const j = await r.json();
 			if (!r.ok) throw new Error(j?.error || "Falha ao carregar usuário");
@@ -438,7 +497,7 @@ export default function Configuracao() {
 		setEditLoading(true);
 		setEditUserId(null);
 		try {
-			if (!squads.length) await loadSquads();
+			if (!squads.length) await loadMoreSquads();
 			setEditForm({
 				name: "",
 				nome_guerra: "",
@@ -492,7 +551,9 @@ export default function Configuracao() {
 				return;
 			}
 			setEditOpen(false);
-			await loadUsers();
+			// recarrega usuários (reset paginação)
+			setUsers([]); setUsersOffset(0); setUsersHasMore(true);
+			await loadMoreUsers();
 		} catch (e: any) {
 			alert(e?.message || "Erro ao salvar");
 		}
@@ -537,7 +598,8 @@ export default function Configuracao() {
 				}
 			}
 			setEditOpen(false);
-			await loadUsers();
+			setUsers([]); setUsersOffset(0); setUsersHasMore(true);
+			await loadMoreUsers();
 		} catch (e: any) {
 			alert(e?.message || "Erro ao criar");
 		}
@@ -600,7 +662,8 @@ export default function Configuracao() {
 				return;
 			}
 			setSquadModalOpen(false);
-			await loadSquads();
+			setSquads([]); setSquadsOffset(0); setSquadsHasMore(true);
+			await loadMoreSquads();
 		} catch (e) {
 			alert((e as any)?.message || "Erro ao criar squad");
 		}
@@ -624,14 +687,15 @@ export default function Configuracao() {
 				return;
 			}
 			setSquadModalOpen(false);
-			await loadSquads();
+			setSquads([]); setSquadsOffset(0); setSquadsHasMore(true);
+			await loadMoreSquads();
 		} catch (e) {
 			alert((e as any)?.message || "Erro ao salvar squad");
 		}
 	};
 
 	return (
-		<section className="max-w-5xl mx-auto">
+		<section className="max-w-5xl mx-auto" ref={sectionRef as any}>
 			<h2 className="text-3xl font-bold text-slate-800 mb-6">Configuração</h2>
 
 			<div className="grid md:grid-cols-2 gap-6">
@@ -763,6 +827,24 @@ export default function Configuracao() {
 									<input className="mt-1 w-full rounded border px-3 py-2" value={teamForm.nome_significado_sigla} onChange={(e) => setTeamForm({ ...teamForm, nome_significado_sigla: e.target.value })} />
 								</div>
 								<div className="sm:col-span-2 lg:col-span-3">
+									<label className="block text-sm text-slate-600">Sobre o patch (Markdown simples)</label>
+									<textarea
+										className="mt-1 w-full rounded border px-3 py-2"
+										rows={6}
+										placeholder={`Exemplo:
+										## O Lobo (Símbolo Central)
+										- Lealdade e Companheirismo
+										- Instinto e Sobrevivência
+
+										## Óculos Táticos e Camuflagem
+										- Prontidão e Proteção
+										- Operações Especiais`}
+										value={teamForm.descricao_patch}
+										onChange={(e) => setTeamForm({ ...teamForm, descricao_patch: e.target.value })}
+									/>
+									<p className="text-[11px] text-slate-500 mt-1">Dica: use "## Título" para seções e linhas iniciando com "-" para listas.</p>
+								</div>
+								<div className="sm:col-span-2 lg:col-span-3">
 									<label className="block text-sm text-slate-600">Upload da imagem</label>
 									<input
 										type="file"
@@ -802,7 +884,9 @@ export default function Configuracao() {
 						<div className="flex items-center gap-2">
 							<button
 								className="text-sm px-3 py-1 rounded border border-slate-300 hover:bg-slate-50"
-								onClick={loadUsers}
+								onClick={() => {
+									setUsers([]); setUsersOffset(0); setUsersHasMore(true); loadMoreUsers();
+								}}
 							>
 								Recarregar
 							</button>
@@ -872,6 +956,7 @@ export default function Configuracao() {
 										))}
 									</tbody>
 								</table>
+								{usersHasMore && <div ref={usersBottomRef} className="h-8" />}
 							</div>
 							<div className="md:hidden grid gap-3">
 								{users.map((u) => (
@@ -909,6 +994,7 @@ export default function Configuracao() {
 									</div>
 								))}
 							</div>
+							{usersHasMore && <div ref={usersBottomRef} className="h-8" />}
 						</>
 					)}
 				</div>
@@ -1113,7 +1199,7 @@ export default function Configuracao() {
 						<div className="flex items-center gap-2">
 							<button
 								className="text-sm px-3 py-1 rounded border border-slate-300 hover:bg-slate-50"
-								onClick={loadSquads}
+								onClick={() => { setSquads([]); setSquadsOffset(0); setSquadsHasMore(true); loadMoreSquads(); }}
 							>
 								Recarregar
 							</button>
@@ -1176,6 +1262,7 @@ export default function Configuracao() {
 										))}
 									</tbody>
 								</table>
+								{squadsHasMore && <div ref={squadsBottomRef} className="h-8" />}
 							</div>
 							<div className="md:hidden grid gap-3">
 								{(squads || []).map((s) => (
@@ -1216,6 +1303,7 @@ export default function Configuracao() {
 									</div>
 								))}
 							</div>
+							{squadsHasMore && <div ref={squadsBottomRef} className="h-8" />}
 						</>
 					)}
 				</div>
@@ -1317,7 +1405,8 @@ export default function Configuracao() {
 												const j = await res.json().catch(() => ({}));
 												alert(j?.error || "Erro ao atualizar status");
 											} else {
-												await loadUsers();
+												setUsers([]); setUsersOffset(0); setUsersHasMore(true);
+												await loadMoreUsers();
 											}
 										} catch (e: any) {
 											alert(e?.message || "Erro ao atualizar status");
@@ -1360,7 +1449,8 @@ export default function Configuracao() {
 												const j = await res.json().catch(() => ({}));
 												alert(j?.error || "Erro ao excluir squad");
 											} else {
-												await loadSquads();
+												setSquads([]); setSquadsOffset(0); setSquadsHasMore(true);
+												await loadMoreSquads();
 											}
 										} catch (e: any) {
 											alert(e?.message || "Erro ao excluir squad");

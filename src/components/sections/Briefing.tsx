@@ -19,9 +19,9 @@ export default function Briefing() {
     ];
 
     return (
-        <section id="briefing">
-            <h1 className="text-4xl font-bold text-slate-800 mb-6">TÓPICO V. PLANEJAMENTO DE MISSÕES (BRIEFING TÁTICO)</h1>
-            <p className="text-lg text-gray-700 mb-6">
+		<section id="briefing">
+			<h1 className="text-4xl font-bold text-slate-800 mb-3">TÓPICO V. PLANEJAMENTO DE MISSÕES (BRIEFING TÁTICO)</h1>
+			<p className="text-lg text-gray-700 mb-3">
                 Todo Briefing de Missão seguirá a estrutura M-E-C-C e será liderado pelo Comando ou Subcomando.
             </p>
             <div className="bg-white rounded-lg shadow-lg overflow-hidden border border-gray-200">

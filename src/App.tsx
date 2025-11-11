@@ -10,6 +10,7 @@ import Logistica from "./components/sections/Logistica";
 import Membros from "./components/sections/Membros";
 import Configuracao from "./components/sections/Configuracao";
 import Jogos from "./components/sections/jogos";
+import Galeria from "./components/sections/Galeria";
 
 // Tempo de guarda para rolagem programática terminar antes de reativar detecção de scroll
 const TIMEOUT_MS = 1200;
@@ -22,6 +23,7 @@ export type SectionKey =
     | "uniformes"
     | "briefing"
     | "logistica"
+    | "galeria"
     | "jogos"
     | "membros"
     | "configuracao";
@@ -34,6 +36,7 @@ const sectionsOrder: SectionKey[] = [
     "uniformes",
     "briefing",
     "logistica",
+    "galeria",
     "jogos",
     "membros",
     "configuracao"
@@ -77,6 +80,7 @@ export default function App() {
         uniformes: null,
         briefing: null,
         logistica: null,
+        galeria: null,
         jogos: null,
         membros: null,
         configuracao: null
@@ -279,6 +283,8 @@ export default function App() {
                 return <Briefing />;
             case "logistica":
                 return <Logistica />;
+            case "galeria":
+                return <Galeria />;
             case "jogos":
                 return <Jogos />;
             case "membros":
@@ -309,7 +315,7 @@ export default function App() {
     }, [handleNavChange]);
 
     return (
-        <div className="min-h-screen flex font-sans bg-slate-100 ml-4">
+        <div className="min-h-screen flex font-sans bg-slate-100">
             {/* Botão global para abrir sidebar - mobile */}
             <button
                 aria-label="Abrir menu"
@@ -350,9 +356,9 @@ export default function App() {
                         key={key}
                         ref={(el) => (sectionRefs.current[key] = el)}
                         data-section-key={key}
-                        className="min-h-[calc(100vh-4rem)] md:min-h-screen p-6 md:p-10"
+                        className="px-4 md:px-6 py-2 md:py-3"
                     >
-                        {idx > 0 && <div className="h-px bg-slate-200 mb-6 -mt-6" aria-hidden="true" />}
+                        {idx > 0 && <div className="h-px bg-slate-200 my-2" aria-hidden="true" />}
                         {renderSectionByKey(key)}
                     </div>
                 ))}
