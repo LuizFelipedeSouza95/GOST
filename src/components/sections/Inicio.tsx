@@ -9,12 +9,27 @@ export default function Inicio() {
         let cancelled = false;
         (async () => {
             try {
-                const res = await fetch("/api/equipe");
-                const data = await res.json();
-                const first = Array.isArray(data) ? (data[0] || null) : null;
-                if (!cancelled && first?.imagem_url) setTeamImage(first.imagem_url as string);
+				// Fallback imediato de cache local (útil em mobile/offline)
+				try {
+					const cached = localStorage.getItem("equipe_cache");
+					if (cached && !cancelled) {
+						const j = JSON.parse(cached);
+						if (j?.imagem_url) setTeamImage(j.imagem_url);
+					}
+				} catch { /* ignore */ }
+
+				const origin = window.location.origin || "";
+				const res = await fetch(`${origin}/api/equipe`, { cache: "no-store" });
+				const data = await res.json();
+				const first = Array.isArray(data) ? (data[0] || null) : null;
+				if (!cancelled && first?.imagem_url) {
+					setTeamImage(first.imagem_url as string);
+				}
+				// Atualiza cache local
+				try { localStorage.setItem("equipe_cache", JSON.stringify(first || {})); } catch { /* ignore */ }
             } catch {
-                // ignore
+				// Mantém o cache/local se houver
+				if (!cancelled && !teamImage) setTeamImage(null);
             }
         })();
         return () => { cancelled = true; };

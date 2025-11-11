@@ -144,19 +144,17 @@ export default function App() {
         if (!scrollByNavRef.current) return;
 
         const node = sectionRefs.current[activeSection];
-        const root = mainRef.current;
 
-        if (node && root) {
+        if (node) {
             // 1. Snap permanece desativado para estabilidade
 
             // 2. Tenta rolar suavemente
             try {
-                // Calcula a posição relativa: posição absoluta do topo do nó - posição absoluta do topo do container + scroll atual do container
-                const targetTop = node.getBoundingClientRect().top - root.getBoundingClientRect().top + root.scrollTop;
-                root.scrollTo({ top: targetTop, behavior: "smooth" });
-            } catch {
-                // Fallback para scrollIntoView
+                // Usa scrollIntoView para rolar o container mais próximo (mainRef) de forma confiável
                 node.scrollIntoView({ behavior: "smooth", block: "start" });
+            } catch {
+                // Sem smooth em casos raros
+                node.scrollIntoView();
             }
 
             // 3. Limpa timers antigos e configura o novo para reabilitar o snap
@@ -291,6 +289,24 @@ export default function App() {
                 return null;
         }
     };
+
+    // Delegação global para links de navegação (garante funcionamento mesmo se algum onClick falhar)
+    useEffect(() => {
+        const onDocClick = (e: MouseEvent) => {
+            const target = e.target as HTMLElement | null;
+            if (!target) return;
+            const anchor = target.closest("a.nav-link") as HTMLAnchorElement | null;
+            if (!anchor) return;
+            const href = anchor.getAttribute("href") || "/";
+            const key = (href.replace(/^\/+/, "") || "inicio") as SectionKey;
+            if ((sectionsOrder as string[]).includes(key)) {
+                e.preventDefault();
+                handleNavChange(key);
+            }
+        };
+        document.addEventListener("click", onDocClick);
+        return () => document.removeEventListener("click", onDocClick);
+    }, [handleNavChange]);
 
     return (
         <div className="min-h-screen flex font-sans bg-slate-100 ml-4">
