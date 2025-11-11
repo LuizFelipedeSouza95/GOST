@@ -11,21 +11,29 @@ export default async function handler(req: any, res: any) {
 			return;
 		}
 		if (req.method === 'POST') {
-			const { email, nome_equipe, data_fundacao, email, telefone, whatsapp, endereco, cidade, estado, pais, cep, facebook, instagram, nome_significado_sigla, imagem_url, fundador, co_fundadores } = req.body || {};
-			if (!email || !nome_equipe || !data_fundacao || !email || !telefone || !whatsapp || !endereco || !cidade || !estado || !pais || !cep || !facebook || !instagram || !nome_significado_sigla || !imagem_url || !fundador || !co_fundadores) {
-				res.status(400).json({ error: 'Todos os campos são obrigatórios' });
+			let body = req.body;
+			if (typeof body === "string") {
+				try { body = JSON.parse(body); } catch { body = {}; }
+			}
+			const { email, nome_equipe, data_fundacao, telefone, whatsapp, endereco, cidade, estado, pais, cep, facebook, instagram, nome_significado_sigla, imagem_url, fundador, co_fundadores } = body || {};
+			// Validação mínima (alinhado ao dev server): exigir pelo menos email ou nome_equipe
+			if (!email && !nome_equipe) {
+				res.status(400).json({ error: 'Informe ao menos email ou nome_equipe' });
 				return;
 			}
 			const em = await getEm();
-			const existing = await em.findOne(Equipe, { nome_equipe });
-			if (existing) {
-				res.status(409).json({ error: 'Equipe com este nome de equipe já existe' });
-				return;
+			// Evita duplicidade pelo nome_equipe quando fornecido
+			if (nome_equipe) {
+				const existing = await em.findOne(Equipe, { nome_equipe });
+				if (existing) {
+					res.status(409).json({ error: 'Equipe com este nome de equipe já existe' });
+					return;
+				}
 			}
 			const equipe = em.create(Equipe, {
 				nome_equipe,
 				data_fundacao,
-				email: email || null,
+				email: email || '',
 				telefone,
 				whatsapp,
 				endereco,

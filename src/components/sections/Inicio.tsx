@@ -4,32 +4,32 @@ const emblemImage = "/path_gost.svg";
 
 export default function Inicio() {
     const [teamImage, setTeamImage] = useState<string | null>(null);
+    const [nome_significado_sigla, setNomeSignificadoSigla] = useState<string | null>(null);
 
     useEffect(() => {
         let cancelled = false;
         (async () => {
             try {
-				// Fallback imediato de cache local (útil em mobile/offline)
-				try {
-					const cached = localStorage.getItem("equipe_cache");
-					if (cached && !cancelled) {
-						const j = JSON.parse(cached);
-						if (j?.imagem_url) setTeamImage(j.imagem_url);
-					}
-				} catch { /* ignore */ }
+                // Fallback imediato de cache local (útil em mobile/offline)
+                try {
+                    const cached = localStorage.getItem("equipe_cache");
+                    if (cached && !cancelled) {
+                        const j = JSON.parse(cached);
+                        if (j?.imagem_url) setTeamImage(j.imagem_url);
+                    }
+                } catch { /* ignore */ }
 
-				const origin = window.location.origin || "";
-				const res = await fetch(`${origin}/api/equipe`, { cache: "no-store" });
-				const data = await res.json();
-				const first = Array.isArray(data) ? (data[0] || null) : null;
-				if (!cancelled && first?.imagem_url) {
-					setTeamImage(first.imagem_url as string);
-				}
-				// Atualiza cache local
-				try { localStorage.setItem("equipe_cache", JSON.stringify(first || {})); } catch { /* ignore */ }
+                const origin = window.location.origin || "";
+                const res = await fetch(`${origin}/api/equipe`, { cache: "no-store" });
+                const data = await res.json();
+                const first = Array.isArray(data) ? (data[0] || null) : null;
+                if (!cancelled && first?.imagem_url) {
+                    setTeamImage(first.imagem_url as string);
+                    setNomeSignificadoSigla(first.nome_significado_sigla as string);
+                }
+                try { localStorage.setItem("equipe_cache", JSON.stringify(first || {})); } catch { /* ignore */ }
             } catch {
-				// Mantém o cache/local se houver
-				if (!cancelled && !teamImage) setTeamImage(null);
+                if (!cancelled && !teamImage) setTeamImage(null);
             }
         })();
         return () => { cancelled = true; };
@@ -41,19 +41,19 @@ export default function Inicio() {
             <div className="bg-white p-8 rounded-lg shadow-lg border border-gray-200">
                 <div className="mb-6 flex justify-center">
                     <img
-						src={teamImage || emblemImage}
+                        src={teamImage || emblemImage}
                         alt="Emblema oficial da GOST"
-						className="h-60 w-60 object-contain rounded-md"
-						referrerPolicy="no-referrer"
-						crossOrigin="anonymous"
-						onError={(e) => {
-							const img = e.currentTarget as HTMLImageElement;
-							if (img.src.endsWith("/path_gost.svg")) return;
-							img.src = "/path_gost.svg";
-						}}
+                        className="h-60 w-60 object-contain rounded-md"
+                        referrerPolicy="no-referrer"
+                        crossOrigin="anonymous"
+                        onError={(e) => {
+                            const img = e.currentTarget as HTMLImageElement;
+                            if (img.src.endsWith("/path_gost.svg")) return;
+                            img.src = "/path_gost.svg";
+                        }}
                     />
                 </div>
-                <h2 className="text-2xl font-semibold text-slate-700 text-center mb-4">Grupamento Operacional de Supressão Tatica</h2>
+                <h2 className="text-2xl font-semibold text-slate-700 text-center mb-4">{nome_significado_sigla}</h2>
                 <div className="text-gray-600 max-w-2xl mx-auto space-y-4">
                     <p className="text-lg">
                         O patch combina diversos símbolos poderosos, sugerindo uma identidade ligada a forças especiais, unidades táticas, ou grupos de entusiastas militares/airsoft/jogos:

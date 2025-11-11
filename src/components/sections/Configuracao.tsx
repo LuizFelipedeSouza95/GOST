@@ -237,7 +237,37 @@ export default function Configuracao() {
 	const loadTeam = async () => {
 		setTeamLoading(true);
 		try {
-			const res = await fetch("/api/equipe");
+			// Fallback imediato: cache local (útil para mobile com rede lenta/cache agressivo)
+			try {
+				const cached = localStorage.getItem("equipe_cache");
+				if (cached) {
+					const first = JSON.parse(cached);
+					if (first && typeof first === "object") {
+						setTeamId(first.id || null);
+						setTeamForm({
+							nome_equipe: first.nome_equipe || "",
+							data_fundacao: maskDateBR(first.data_fundacao || ""),
+							email: first.email || "",
+							telefone: maskPhoneBR(first.telefone || ""),
+							whatsapp: maskPhoneBR(first.whatsapp || ""),
+							endereco: first.endereco || "",
+							cidade: first.cidade || "",
+							estado: first.estado || "",
+							pais: first.pais || "",
+							cep: first.cep || "",
+							facebook: first.facebook || "",
+							instagram: first.instagram || "",
+							nome_significado_sigla: first.nome_significado_sigla || "",
+							imagem_url: first.imagem_url || "",
+							fundador: first.fundador || "",
+							co_fundadores: first.co_fundadores || ""
+						});
+					}
+				}
+			} catch {}
+
+			const origin = window.location.origin || "";
+			const res = await fetch(`${origin}/api/equipe`, { cache: "no-store" });
 			const data = await res.json();
 			const first = Array.isArray(data) ? (data[0] || null) : null;
 			if (first) {
@@ -260,6 +290,7 @@ export default function Configuracao() {
 					fundador: first.fundador || "",
 					co_fundadores: first.co_fundadores || ""
 				});
+				try { localStorage.setItem("equipe_cache", JSON.stringify(first)); } catch {}
 			}
 		} catch {
 		} finally {
@@ -604,7 +635,6 @@ export default function Configuracao() {
 			<h2 className="text-3xl font-bold text-slate-800 mb-6">Configuração</h2>
 
 			<div className="grid md:grid-cols-2 gap-6">
-				{/* Dados do time */}
 				<div className="bg-white rounded-lg shadow p-5 border border-slate-200 md:col-span-2">
 					<div className="flex items-center justify-between mb-4">
 						<h3 className="text-xl font-semibold">Dados do Time</h3>
