@@ -26,9 +26,16 @@ export default function Inicio() {
             <div className="bg-white p-8 rounded-lg shadow-lg border border-gray-200">
                 <div className="mb-6 flex justify-center">
                     <img
-                        src={teamImage || emblemImage}
+						src={teamImage || emblemImage}
                         alt="Emblema oficial da GOST"
-                        className="h-60 w-60 object-contain rounded-md"
+						className="h-60 w-60 object-contain rounded-md"
+						referrerPolicy="no-referrer"
+						crossOrigin="anonymous"
+						onError={(e) => {
+							const img = e.currentTarget as HTMLImageElement;
+							if (img.src.endsWith("/path_gost.svg")) return;
+							img.src = "/path_gost.svg";
+						}}
                     />
                 </div>
                 <h2 className="text-2xl font-semibold text-slate-700 text-center mb-4">Grupamento Operacional de Supressão Tatica</h2>

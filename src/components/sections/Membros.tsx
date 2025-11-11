@@ -45,6 +45,27 @@ function PersonNode({ name, color, picture }: { name: string; color: "rose" | "a
     );
 }
 
+function Avatar({ src, alt, size = 36 }: { src?: string | null; alt: string; size?: number }) {
+    const resolved = (src && String(src).trim().length ? src : "/path_gost.svg") as string;
+    return (
+        <div className="rounded-full overflow-hidden bg-slate-200 border border-slate-300 shadow-sm"
+            style={{ width: size, height: size }}>
+            <img
+                src={resolved}
+                alt={alt}
+                className="w-full h-full object-cover"
+                referrerPolicy="no-referrer"
+                crossOrigin="anonymous"
+                onError={(e) => {
+                    const img = e.currentTarget as HTMLImageElement;
+                    if (img.src.endsWith("/path_gost.svg")) return;
+                    img.src = "/path_gost.svg";
+                }}
+            />
+        </div>
+    );
+}
+
 type DbUser = {
     id: string;
     email: string;
@@ -199,7 +220,7 @@ function HierarquiaMobile({ data }: { data: DbUser[] }) {
             {byPatent.comando.map((c) => (
                 <div key={c.id} className="rounded-lg border border-slate-200 bg-white p-4 shadow-sm w-full">
                     <div className="flex items-center gap-3 min-w-0">
-                        <div className="shrink-0"><UserIcon /></div>
+                        <div className="shrink-0"><Avatar src={c.picture} alt={c.name || c.email} /></div>
                         <div className="flex-1 min-w-0">
                             <div className="text-sm font-semibold text-slate-800 break-words">{c.name || c.email}</div>
                             <div className="text-[11px] text-rose-600">Comando</div>
@@ -211,8 +232,11 @@ function HierarquiaMobile({ data }: { data: DbUser[] }) {
                             <div className="grid gap-2">
                                 {squadsByComando[c.id].map((sq) => (
                                     <div key={sq.id} className="rounded border border-slate-200 p-2">
-                                        <div className="flex items-center justify-between gap-2">
-                                            <div className="text-xs font-semibold text-slate-800 break-words">{sq.name || sq.email}</div>
+                                        <div className="flex items-center justify-between gap-2 min-w-0">
+                                            <div className="flex items-center gap-2 min-w-0">
+                                                <Avatar src={sq.picture} alt={sq.name || sq.email} size={28} />
+                                                <div className="text-xs font-semibold text-slate-800 break-words">{sq.name || sq.email}</div>
+                                            </div>
                                             <span className="text-[11px] text-amber-600">Comando de squad</span>
                                         </div>
                                         {soldadosBySquadCmd[sq.id]?.length ? (
