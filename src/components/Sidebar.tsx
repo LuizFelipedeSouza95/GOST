@@ -1,5 +1,6 @@
 import type { SectionKey } from "../App";
 import { useEffect, useMemo, useRef, useState } from "react";
+import { fetchEquipeOnce, readEquipeFromLocal } from "../lib/equipeClient";
 
 type Props = {
     active: SectionKey;
@@ -25,6 +26,24 @@ export default function Sidebar({ active, onChange, open = false, onClose }: Pro
     const [userOpen, setUserOpen] = useState(false);
     const userMenuRef = useRef<HTMLDivElement | null>(null);
     const googleBtnRef = useRef<HTMLDivElement | null>(null);
+    const [teamImage, setTeamImage] = useState<string>(() => {
+        try {
+            const eq = readEquipeFromLocal();
+            return eq?.imagem_url || "/path_gost.svg";
+        } catch { return "/path_gost.svg"; }
+    });
+    const [teamName, setTeamName] = useState<string>(() => {
+        try {
+            const eq = readEquipeFromLocal();
+            return eq?.nome_equipe || "GOST";
+        } catch { return "GOST"; }
+    });
+    const [teamMeaning, setTeamMeaning] = useState<string>(() => {
+        try {
+            const eq = readEquipeFromLocal();
+            return eq?.nome_significado_sigla || "Grupamento Operacional de Supressão Tatica";
+        } catch { return "Grupamento Operacional de Supressão Tatica"; }
+    });
     const [currentUser, setCurrentUser] = useState<any | null>(() => {
         try {
             const raw = typeof window !== "undefined" ? localStorage.getItem("currentUser") : null;
@@ -157,6 +176,22 @@ export default function Sidebar({ active, onChange, open = false, onClose }: Pro
         return () => window.removeEventListener("storage", onStorage);
     }, []);
 
+    // Carrega imagem da equipe (imediato do cache + atualização em segundo plano)
+    useEffect(() => {
+        const cached = readEquipeFromLocal();
+        if (cached) {
+            if (cached?.imagem_url) setTeamImage(cached.imagem_url);
+            if (cached?.nome_equipe) setTeamName(cached.nome_equipe);
+            if (cached?.nome_significado_sigla) setTeamMeaning(cached.nome_significado_sigla);
+        }
+        fetchEquipeOnce().then((data) => {
+            if (!data) return;
+            if (data?.imagem_url) setTeamImage(data.imagem_url);
+            if (data?.nome_equipe) setTeamName(data.nome_equipe);
+            if (data?.nome_significado_sigla) setTeamMeaning(data.nome_significado_sigla);
+        }).catch(() => {});
+    }, []);
+
     // Sincroniza usuário com o servidor para refletir mudanças de roles/patent feitas no banco
     useEffect(() => {
         const sync = async () => {
@@ -197,10 +232,10 @@ export default function Sidebar({ active, onChange, open = false, onClose }: Pro
         >
             <div className="flex flex-col items-center justify-center gap-1 border-b border-slate-700 overflow-visible mt-2">
                 <div className="flex flex-row items-center justify-center relative">
-                    <a href="/"><img src="/path_gost.svg" alt="Logo GOST" className="w-9 h-9 object-cover rounded-md" /></a>
-                    <span className="text-2xl font-bold text-white">GOST</span><br />
+                    <a href="/"><img src={teamImage} alt={teamName || "Logo GOST"} className="w-9 h-9 object-cover rounded-md" referrerPolicy="no-referrer" crossOrigin="anonymous" onError={(e) => { (e.currentTarget as HTMLImageElement).src = "/path_gost.svg"; }} /></a>
+                    <span className="text-2xl font-bold text-white">{teamName}</span><br />
                 </div>
-                <span className="text-base text-white italic text-center mb-1">Grupamento Operacional de Supressão Tatica</span>
+                <span className="text-base text-white italic text-center mb-1">{teamMeaning}</span>
             </div>
             <div className="flex-1">
                 <ul id="desktop-nav">

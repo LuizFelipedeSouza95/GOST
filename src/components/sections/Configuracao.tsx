@@ -93,6 +93,7 @@ export default function Configuracao() {
 	const [loadingSquads, setLoadingSquads] = useState(false);
 	const [squadsOffset, setSquadsOffset] = useState(0);
 	const [squadsHasMore, setSquadsHasMore] = useState(true);
+	const squadsLoadingRef = useRef(false);
 	// Modal de squads
 	const [squadModalOpen, setSquadModalOpen] = useState(false);
 	const [squadIsCreate, setSquadIsCreate] = useState(false);
@@ -235,7 +236,8 @@ export default function Configuracao() {
 	};
 
 	const loadMoreSquads = async () => {
-		if (loadingSquads || !squadsHasMore) return;
+		if (squadsLoadingRef.current || loadingSquads || !squadsHasMore) return;
+		squadsLoadingRef.current = true;
 		setLoadingSquads(true);
 		try {
 			const limit = 20;
@@ -249,6 +251,7 @@ export default function Configuracao() {
 			setSquadsHasMore(false);
 		} finally {
 			setLoadingSquads(false);
+			squadsLoadingRef.current = false;
 		}
 	};
 
@@ -1262,7 +1265,6 @@ export default function Configuracao() {
 										))}
 									</tbody>
 								</table>
-								{squadsHasMore && <div ref={squadsBottomRef} className="h-8" />}
 							</div>
 							<div className="md:hidden grid gap-3">
 								{(squads || []).map((s) => (

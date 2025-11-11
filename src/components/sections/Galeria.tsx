@@ -41,6 +41,8 @@ export default function Galeria() {
 	const [coverOpen, setCoverOpen] = useState(false);
 	const [coverFile, setCoverFile] = useState<File | null>(null);
 	const [coverSaving, setCoverSaving] = useState(false);
+	// excluir galeria (jogo + fotos)
+	const [deleteGallery, setDeleteGallery] = useState<{ id: string; name: string } | null>(null);
 
 	// fotos do jogo (detalhe) com paginação
 	const [fotos, setFotos] = useState<GaleriaItem[]>([]);
@@ -49,6 +51,23 @@ export default function Galeria() {
 	const [loadingFotos, setLoadingFotos] = useState(false);
 	const modalScrollRef = useRef<HTMLDivElement | null>(null);
 	const fotosBottomRef = useRef<HTMLDivElement | null>(null);
+	// viewer/carrossel
+	const [viewerOpen, setViewerOpen] = useState(false);
+	const [viewerIndex, setViewerIndex] = useState<number>(0);
+	const openViewerAt = (idx: number) => { setViewerIndex(idx); setViewerOpen(true); };
+	const closeViewer = () => setViewerOpen(false);
+	const goPrev = () => setViewerIndex((i) => Math.max(0, i - 1));
+	const goNext = () => setViewerIndex((i) => Math.min(fotos.length - 1, i + 1));
+	useEffect(() => {
+		if (!viewerOpen) return;
+		const onKey = (e: KeyboardEvent) => {
+			if (e.key === "Escape") closeViewer();
+			if (e.key === "ArrowLeft") goPrev();
+			if (e.key === "ArrowRight") goNext();
+		};
+		document.addEventListener("keydown", onKey);
+		return () => document.removeEventListener("keydown", onKey);
+	}, [viewerOpen, fotos.length]);
 
 	useEffect(() => {
 		try {
@@ -111,7 +130,7 @@ export default function Galeria() {
 
 	// Infinite scroll para jogos (sentinela no fim da grade)
 	useEffect(() => {
-		if (!bottomRef.current) return;
+		if (!ready || jogos.length === 0 || !bottomRef.current) return;
 		const io = new IntersectionObserver(
 			(entries) => {
 				for (const e of entries) {
@@ -125,7 +144,7 @@ export default function Galeria() {
 		io.observe(bottomRef.current);
 		return () => io.disconnect();
 		// eslint-disable-next-line react-hooks/exhaustive-deps
-	}, [bottomRef.current, ready, jogosHasMore]);
+	}, [bottomRef.current, ready, jogos.length, jogosHasMore]);
 
 	const jogosOptions = useMemo(() => {
 		return jogos
@@ -414,20 +433,21 @@ export default function Galeria() {
 						{jogosOrdenados.map((j) => {
 							const capa = j.capa_url || "/path_gost.svg";
 							return (
-								<button
-									key={j.id}
-									className="text-left rounded border border-slate-200 bg-white shadow-sm hover:shadow transition-shadow overflow-hidden"
-									onClick={() => {
-										setIdJogo(j.id);
-										setModalOpen(false);
-										// carregar fotos do jogo
-										setFotos([]);
-										setFotosOffset(0);
-										setFotosHasMore(true);
-										reloadFotosDoJogo(j.id);
-									}}
-								>
-									<div className="w-full aspect-video bg-slate-100">
+								<div key={j.id} className="relative rounded border border-slate-200 bg-white shadow-sm hover:shadow transition-shadow overflow-hidden">
+									<button
+										className="absolute inset-0 z-10"
+										aria-label={`Abrir galeria ${j.nome_jogo}`}
+										onClick={() => {
+											setIdJogo(j.id);
+											setModalOpen(false);
+											// carregar fotos do jogo
+											setFotos([]);
+											setFotosOffset(0);
+											setFotosHasMore(true);
+											reloadFotosDoJogo(j.id);
+										}}
+									/>
+									<div className="w-full aspect-video bg-slate-100 pointer-events-none">
 										<img
 											src={capa}
 											alt={j.nome_jogo}
@@ -438,11 +458,12 @@ export default function Galeria() {
 											onError={(e) => { (e.currentTarget as HTMLImageElement).src = "/path_gost.svg"; }}
 										/>
 									</div>
-									<div className="p-3">
+									<div className="p-3 pointer-events-none">
 										<div className="font-semibold text-slate-800">{j.nome_jogo}</div>
 										<div className="text-xs text-slate-500">{j.data_jogo}</div>
 									</div>
-								</button>
+									{/* ação de excluir movida para dentro do modal de galeria */}
+								</div>
 							);
 						})}
 					</div>
@@ -461,7 +482,7 @@ export default function Galeria() {
 									<div className="flex items-center gap-2">
 										{isAdmin && (
 											<button
-												className={`p-2 rounded border border-slate-300 ${((jogoMap.get(idJogo)?.data_jogo || "") < today) ? "hover:bg-slate-50" : "opacity-50 cursor-not-allowed"}`}
+												className={`p-1.5 rounded border border-slate-300 ${((jogoMap.get(idJogo)?.data_jogo || "") < today) ? "hover:bg-slate-50" : "opacity-50 cursor-not-allowed"}`}
 												onClick={() => {
 													if (!((jogoMap.get(idJogo)?.data_jogo || "") < today)) return;
 													setModalOpen(true);
@@ -475,26 +496,37 @@ export default function Galeria() {
 										)}
 										{isAdmin && (
 											<button
-												className="p-2 rounded border border-slate-300 hover:bg-slate-50"
+												className="p-1 rounded border border-slate-300 hover:bg-slate-50"
 												onClick={() => setCoverOpen(true)}
 												title="Alterar capa da galeria"
 											>
 												Capa
 											</button>
 										)}
-										<button className="p-2 rounded hover:bg-slate-100" onClick={() => setIdJogo("")} aria-label="Fechar">
-											<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-5 h-5">
-												<path d="M6 18L18 6M6 6l12 12" />
+										{isAdmin && (
+											<button
+												className="p-1.5 rounded border border-slate-300 hover:bg-red-50"
+												onClick={() => setDeleteGallery({ id: idJogo, name: jogoMap.get(idJogo)?.nome_jogo || "" })}
+												title="Excluir galeria"
+											>
+												<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2">
+													<path strokeLinecap="round" strokeLinejoin="round" d="M6 7h12M9 7V5a2 2 0 012-2h2a2 2 0 012 2v2m1 0v12a2 2 0 01-2 2H8a2 2 0 01-2-2V7h10z" />
+												</svg>
+											</button>
+										)}
+										<button className="p-1.5 rounded hover:bg-slate-100" onClick={() => setIdJogo("")} aria-label="Fechar">
+											<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="w-5 h-5 text-slate-800">
+												<path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
 											</svg>
 										</button>
 									</div>
 								</div>
 								<div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
-									{fotos.map((it) => (
+									{fotos.map((it, idx) => (
 										<div key={it.id} className="rounded border border-slate-200 overflow-hidden bg-white shadow-sm">
-											<div className="w-full aspect-square bg-slate-100">
+											<button className="w-full aspect-square bg-slate-100" onClick={() => openViewerAt(idx)}>
 												<img src={it.imagem_url} alt={jogoMap.get(idJogo)?.nome_jogo || it.id} className="w-full h-full object-cover" referrerPolicy="no-referrer" crossOrigin="anonymous" loading="lazy" />
-											</div>
+											</button>
 											<div className="p-2 text-xs text-slate-700 flex items-center justify-between">
 												{/* {it.descricao ? <div className="text-[11px] text-slate-600 pr-2">{it.descricao}</div> : <span className="text-[11px] text-slate-400">Sem descrição</span>} */}
 												{isAdmin && (
@@ -522,8 +554,8 @@ export default function Galeria() {
 						<div className="flex items-center justify-between mb-4">
 							<h4 className="text-lg font-semibold">Adicionar Fotos</h4>
 							<button className="p-2 rounded hover:bg-slate-100" onClick={() => setModalOpen(false)} aria-label="Fechar">
-								<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-5 h-5">
-									<path d="M6 18L18 6M6 6l12 12" />
+								<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-6 h-6 text-slate-800">
+									<path fillRule="evenodd" clipRule="evenodd" d="M4.293 4.293a1 1 0 0 1 1.414 0L12 10.586l6.293-6.293a1 1 0 1 1 1.414 1.414L13.414 12l6.293 6.293a1 1 0 0 1-1.414 1.414L12 13.414l-6.293 6.293a1 1 0 0 1-1.414-1.414L10.586 12 4.293 5.707a1 1 0 0 1 0-1.414z" />
 								</svg>
 							</button>
 						</div>
@@ -570,7 +602,7 @@ export default function Galeria() {
 								<h4 className="text-lg font-semibold">Nova galeria</h4>
 							</div>
 							<button className="p-2 rounded hover:bg-slate-100" onClick={() => setCreateOpen(false)} aria-label="Fechar">
-								<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-5 h-5">
+								<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-5 h-5 text-slate-700">
 									<path d="M6 18L18 6M6 6l12 12" />
 								</svg>
 							</button>
@@ -630,7 +662,7 @@ export default function Galeria() {
 						<div className="flex items-center justify-between mb-4">
 							<h4 className="text-lg font-semibold">Alterar capa</h4>
 							<button className="p-2 rounded hover:bg-slate-100" onClick={() => setCoverOpen(false)} aria-label="Fechar">
-								<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-5 h-5">
+								<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-5 h-5 text-slate-700">
 									<path d="M6 18L18 6M6 6l12 12" />
 								</svg>
 							</button>
@@ -659,6 +691,70 @@ export default function Galeria() {
 							<button className="px-4 py-2 rounded border border-slate-300 hover:bg-slate-50" onClick={() => setToDelete(null)}>Cancelar</button>
 							<button className="px-4 py-2 rounded bg-rose-600 text-white hover:bg-rose-700" onClick={handleDelete}>Excluir</button>
 						</div>
+					</div>
+				</div>
+			)}
+
+			{isAdmin && deleteGallery && (
+				<div className="fixed inset-0 z-[2350] flex items-center justify-center">
+					<div className="absolute inset-0 bg-black/30" onClick={() => setDeleteGallery(null)} />
+					<div className="relative bg-white rounded-lg shadow-xl w-[calc(100%-2rem)] sm:w-full sm:max-w-md p-4 mx-2">
+						<h4 className="text-lg font-semibold text-slate-800 mb-2">Excluir galeria</h4>
+						<p className="text-sm text-slate-600">Tem certeza que deseja excluir a galeria "{deleteGallery.name}" e todas as fotos vinculadas?</p>
+						<div className="mt-4 flex items-center justify-end gap-3">
+							<button className="px-4 py-2 rounded border border-slate-300 hover:bg-slate-50" onClick={() => setDeleteGallery(null)}>Cancelar</button>
+							<button
+								className="px-4 py-2 rounded bg-rose-600 text-white hover:bg-rose-700"
+								onClick={async () => {
+									try {
+										if (!isAdmin || !deleteGallery?.id) return;
+										// remove fotos do jogo
+										const r = await fetch(`/api/galeria?jogo_id=${deleteGallery.id}&offset=0&limit=200`);
+										const arr = await r.json().catch(() => []);
+										if (Array.isArray(arr)) {
+											for (const it of arr) {
+												try { await fetch(`/api/galeria/${it.id}`, { method: "DELETE" }); } catch { }
+											}
+										}
+										// remove jogo
+										await fetch(`/api/jogos/${deleteGallery.id}`, { method: "DELETE" });
+										// atualiza lista de jogos
+										setJogos([]);
+										setJogosOffset(0);
+										setJogosHasMore(true);
+										await loadMoreJogos();
+										setDeleteGallery(null);
+									} catch (e: any) {
+										setError(e?.message || "Falha ao excluir galeria");
+									}
+								}}
+							>
+								Excluir
+							</button>
+						</div>
+					</div>
+				</div>
+			)}
+
+			{viewerOpen && (
+				<div className="fixed inset-0 z-[2250] bg-black/80 flex items-center justify-center">
+					<button className="absolute left-3 p-3 rounded-full bg-white/20 hover:bg-white/30 text-white disabled:opacity-40" onClick={goPrev} disabled={viewerIndex === 0} aria-label="Anterior">
+						<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="w-6 h-6">
+							<path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
+						</svg>
+					</button>
+					<button className="absolute right-3 p-3 rounded-full bg-white/20 hover:bg-white/30 text-white disabled:opacity-40" onClick={goNext} disabled={viewerIndex >= fotos.length - 1} aria-label="Próxima">
+						<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="w-6 h-6">
+							<path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+						</svg>
+					</button>
+					<div className="relative max-w-[90vw] max-h-[85vh]">
+						<button className="absolute top-2 right-2 p-2 rounded bg-black/40 text-white hover:bg-black/50" onClick={closeViewer} aria-label="Fechar visualizador">
+							<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="w-6 h-6 text-white">
+								<path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+							</svg>
+						</button>
+						<img src={fotos[viewerIndex]?.imagem_url} alt="Visualização" className="max-w-full max-h-[85vh] object-contain" referrerPolicy="no-referrer" crossOrigin="anonymous" />
 					</div>
 				</div>
 			)}
